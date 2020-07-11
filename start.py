@@ -3,7 +3,7 @@ from calculator import calculateOrder
 from inventory import getStartingInventory, getInventoryFrames
 from recipes import getRecipeList
 from config import getConfig
-from logger import log, initLogging
+from logger import log
 
 def worker(workQueue, doneQueue):
 	while(True):
@@ -49,6 +49,5 @@ while(True):
 	#sanity check
 	if(result[0] < currentFrameRecord):
 		currentFrameRecord = result[0]
-		print('cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
-		raw_input()
+		log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
 	cycle_count += 1
