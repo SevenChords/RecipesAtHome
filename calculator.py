@@ -101,8 +101,8 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 		itemNames.append(recipeList[item]["NAME"])
 		log(7, "Calculator", "Items", "Scan", recipeList[item]["NAME"] + " scanned.")
 	log(5, "Calculator", "Items", "Scan", "All item names scanned successfully.")
-	randomise = (getConfig("randomise") == True)
-	select = (getConfig("select") == True)
+	randomise = bool(getConfig("randomise") == "True")
+	select = bool(getConfig("select") == "True")
 	#===============================================================================
 	# GOAL
 	#===============================================================================
