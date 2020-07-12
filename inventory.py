@@ -4,13 +4,13 @@ import math
 from logger import log
 from recipes import getRecipeList
 
-recipeList = getRecipeList()
-itemNames = []
+#recipeList = getRecipeList()
+#itemNames = []
 #Fill the itemNames
-for item in recipeList:
-	itemNames.append(recipeList[item]["NAME"])
-	log(7, "Inventory", "Items", "Scan", recipeList[item]["NAME"] + " scanned.")
-log(5, "Inventory", "Items", "Scan", "All item names scanned successfully.")
+#for item in recipeList:
+#	itemNames.append(recipeList[item]["NAME"])
+#	log(7, "Inventory", "Items", "Scan", recipeList[item]["NAME"] + " scanned.")
+#log(5, "Inventory", "Items", "Scan", "All item names scanned successfully.")
 
 def getAlphaSort():
 	file = open(os.getcwd() + "/itemSorts/alphabetic.txt","r")
@@ -67,7 +67,7 @@ def getInventoryFrames():
 	log(5, "Inventory", "Frames", "Generate", str(invFrames))
 	return invFrames
 
-def checkIngredients(recipe, inventoryLocal, outputCreated, level=0):
+def checkIngredients(recipe, inventoryLocal, outputCreated, recipeList, itemNames, level=0):
 	#With the given inventory and knolwedge of which outputs have already been created,
 	#Determine if the given recipe can be fulfilled
 	for item in recipe:
@@ -83,13 +83,13 @@ def checkIngredients(recipe, inventoryLocal, outputCreated, level=0):
 				tempGoodRecipe = False
 				for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
 					#Check to see if this ingredient can be made with other ingredients the player has
-					if(checkIngredients(newRecipe, inventoryLocal, outputCreated, level + 1)):
+					if(checkIngredients(newRecipe, inventoryLocal, outputCreated, recipeList, itemNames, level + 1)):
 						#At least one recipe can be fulfilled now.
 						tempGoodRecipe = True
-					log(7, "Inventory", "Recipe", "Check", "Recipe " + str(newRecipe) + " has been evaluated.")
+					#log(7, "Inventory", "Recipe", "Check", "Recipe " + str(newRecipe) + " has been evaluated.")
 				#After evaluating all recipes of the item, if that item cannot be produced, return false
 				if(not tempGoodRecipe):
-					log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
+					#log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
 					return False
 			else:
 				return False
@@ -97,35 +97,35 @@ def checkIngredients(recipe, inventoryLocal, outputCreated, level=0):
 			#The item isn't in the inventory, and can't be made through another recipe, return False
 			return False
 	#By getting here, we know all ingredients are at least possible to create still with the current inventory
-	log(5, "inventory", "Recipe", "Check", "It is still possible to make all the ingredients with the current inventory")
+	#log(5, "inventory", "Recipe", "Check", "It is still possible to make all the ingredients with the current inventory")
 	return True
 
-# def checkIngredients(recipe, inventoryLocal, outputCreated):
-# 	#With the given inventory, determine if the remaining output items be fulfilled
-# 	for item in recipe:
-# 		if item in inventoryLocal:
-# 			#This item is in the current inventory, do nothing for now
-# 			pass
-# 		elif item in itemNames and(not outputCreated[itemNames.index(item)]):
-# 			tempGoodRecipe = False
-# 			for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
-# 				#Recurse on all recipes that can make this item
-# 				tempOutputCreated = copy.copy(outputCreated)
-# 				tempOutputCreated[itemNames.index(item)] = True
-# 				tempGoodRecipe = tempGoodRecipe or checkIngredients(newRecipe, inventoryLocal, tempOutputCreated)
-# 				log(7, "Inventory", "Recipe", "Check", str(newRecipe) + " has been evaluated.")
-# 			#After evaluating all recipes of the item, if that item cannot be produced, return false
-# 			if(not tempGoodRecipe):
-# 				log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
-# 				return False
-# 		else:
-# 			#The item isn't in the inventory, and can't be made through another recipe, return False
-# 			return False
-# 	#By getting here, we know all items are at least possible to create still with the current inventory
-# 	log(7, "inventory", "Recipe", "Check", "It is still possible to make all the items with the current inventory")
-# 	return True
+def checkIngredients(recipe, inventoryLocal, outputCreated, recipeList, itemNames):
+ 	#With the given inventory, determine if the remaining output items be fulfilled
+ 	for item in recipe:
+ 		if item in inventoryLocal:
+ 			#This item is in the current inventory, do nothing for now
+ 			pass
+ 		elif item in itemNames and(not outputCreated[itemNames.index(item)]):
+ 			tempGoodRecipe = False
+ 			for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
+ 				#Recurse on all recipes that can make this item
+ 				tempOutputCreated = copy.copy(outputCreated)
+ 				tempOutputCreated[itemNames.index(item)] = True
+ 				tempGoodRecipe = tempGoodRecipe or checkIngredients(newRecipe, inventoryLocal, tempOutputCreated, recipeList, itemNames)
+ 				#log(7, "Inventory", "Recipe", "Check", str(newRecipe) + " has been evaluated.")
+ 			#After evaluating all recipes of the item, if that item cannot be produced, return false
+ 			if(not tempGoodRecipe):
+ 				#log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
+ 				return False
+ 		else:
+ 			#The item isn't in the inventory, and can't be made through another recipe, return False
+ 			return False
+ 	#By getting here, we know all items are at least possible to create still with the current inventory
+ 	#log(7, "inventory", "Recipe", "Check", "It is still possible to make all the items with the current inventory")
+ 	return True
 
-def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated):
+def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList, itemNames):
 	#With the given inventory, can the remaining recipes be fulfilled?
 	#Iterate through all remaining output items
 	for outputItem in recipeList:
@@ -138,7 +138,7 @@ def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated):
 			#TODO: Check if there's a more efficient algorithm
 				tempOutputCreated = copy.copy(outputCreated)
 				tempOutputCreated[outputItem-1] = True
-				viableIngredientsFound = viableIngredientsFound or checkIngredients(recipe, inventoryLocal, tempOutputCreated)
+				viableIngredientsFound = viableIngredientsFound or checkIngredients(recipe, inventoryLocal, tempOutputCreated, recipeList, itemNames)
 			if(not viableIngredientsFound):
 				#There's a few exceptions
 				if(outputCreated[57]):
@@ -153,8 +153,8 @@ def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated):
 				else:
 					#Any other output items will need something that we *should* have
 					return False
-		log(7, "Inventory", "Recipe", "Check", str(recipeList[outputItem]["NAME"]) + " has been evaluated.")
+		#log(7, "Inventory", "Recipe", "Check", str(recipeList[outputItem]["NAME"]) + " has been evaluated.")
 	#haven't returned False in evaluating all output items
 	#Meaning that all remeining outputs can still be fulfilled!
-	log(7, "Inventory", "Recipe", "Check", "All remaining output items can be fulfilled")
+	#log(7, "Inventory", "Recipe", "Check", "All remaining output items can be fulfilled")
 	return True
