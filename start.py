@@ -37,17 +37,18 @@ def work(currentFrameRecord, startingInventory, recipeList, invFrames):
 		instance.terminate()
 	return result
 
-currentFrameRecord = 9999
-cycle_count = 1
-startingInventory = getStartingInventory()
-recipeList = getRecipeList()
-invFrames = getInventoryFrames()
-workerCount = int(getConfig("workerCount"))
-while(True):
-	#start the work
-	result = work(currentFrameRecord, startingInventory, recipeList, invFrames)
-	#sanity check
-	if(result[0] < currentFrameRecord):
-		currentFrameRecord = result[0]
-		log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
-	cycle_count += 1
+if __name__ == '__main__':
+	currentFrameRecord = 9999
+	cycle_count = 1
+	startingInventory = getStartingInventory()
+	recipeList = getRecipeList()
+	invFrames = getInventoryFrames()
+	workerCount = int(getConfig("workerCount"))
+	while(True):
+		#start the work
+		result = work(currentFrameRecord, startingInventory, recipeList, invFrames)
+		#sanity check
+		if(result[0] < currentFrameRecord):
+			currentFrameRecord = result[0]
+			log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
+		cycle_count += 1
