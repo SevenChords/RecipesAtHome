@@ -1,7 +1,7 @@
 import copy
 import random
 from logger import log
-from inventory import getAlphaSort, getTypeSort, checkIngredients, remainingOutputsCanBeFulfilled,
+from inventory import getAlphaSort, getTypeSort, checkIngredients, remainingOutputsCanBeFulfilled
 from moves import getInsertionIndex
 from config import getConfig
 
