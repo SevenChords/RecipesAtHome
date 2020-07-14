@@ -106,7 +106,12 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 		while(iterationCount < 100000000):
 	
 			#Check for bad states to immediately retreat from
-			if((not outputCreated[stepIndex][57] and (not "Fire Flower" in inventory[stepIndex] or not "Mystic Egg" in inventory[stepIndex] or not "Cake Mix" in inventory[stepIndex] or not "Turtley Leaf" in inventory[stepIndex] or outputCreated[stepIndex][54] and not "Egg Bomb" in inventory[stepIndex]))): #If the Egg Bomb was made pre-Ch.5, make sure its still in the inventory
+			if((not outputCreated[stepIndex][57] and (
+				not "Fire Flower" in inventory[stepIndex] or
+				not "Mystic Egg" in inventory[stepIndex] or
+				not "Cake Mix" in inventory[stepIndex] or
+				not "Turtley Leaf" in inventory[stepIndex] or 
+				outputCreated[stepIndex][54] and not "Egg Bomb" in inventory[stepIndex]))): #If the Egg Bomb was made pre-Ch.5, make sure its still in the inventory
 				#We need to have the fire flower for the post-chapter-5 intermission
 		
 				#Regardless of record status, it's time to go back up and find new endstates

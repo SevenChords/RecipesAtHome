@@ -1,7 +1,7 @@
 Golden Leaf
 Peachy Peach
 Shooting Star
-POW Block
+Fire Flower
 Ultra Shroom
 Cake Mix
 Thunder Rage
@@ -17,4 +17,4 @@ Hot Dog
 Ruin Powder
 Maple Syrup
 Hot Sauce
-Jammin' Jelly
+Jammin Jelly

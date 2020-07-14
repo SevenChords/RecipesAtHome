@@ -213,7 +213,6 @@ Hot Sauce, Koopa Tea
 Hot Sauce, Turtley Leaf
 Hot Sauce, Zess Tea
 Hot Sauce, Tasty Tonic
-Hot Sauce, Shroom Broth
 ===
 Icicle Pop
 ---

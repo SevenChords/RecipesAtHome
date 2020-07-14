@@ -13,7 +13,7 @@ from recipes import getRecipeList
 #log(5, "Inventory", "Items", "Scan", "All item names scanned successfully.")
 
 def getAlphaSort():
-	file = open(os.getcwd() + "/itemSorts/alphabetic.txt","r")
+	file = open(os.getcwd() + "/itemSorts/alphabetic_sort-JP.txt","r")
 	log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
 	sortList = []
 	for line in file:
@@ -25,7 +25,7 @@ def getAlphaSort():
 	return sortList
 
 def getTypeSort():
-	file = open(os.getcwd() + "/itemSorts/type.txt","r")
+	file = open(os.getcwd() + "/itemSorts/type_sort-JP.txt","r")
 	log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
 	sortList = []
 	for line in file:
