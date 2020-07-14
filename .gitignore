@@ -6,3 +6,9 @@ __pycache__/logger.cpython-37.pyc
 __pycache__/recipes.cpython-37.pyc
 __pycache__/moves.cpython-37.pyc
 calculateRecipeOrder.log
+calculator.pyc
+config.pyc
+inventory.pyc
+moves.pyc
+logger.pyc
+recipes.pyc
