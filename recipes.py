@@ -3,7 +3,7 @@ from logger import log
 
 def getRecipeList():
 	#load recipes file into single string
-	file = open(os.getcwd() + "/recipes.txt","r")
+	file = open(os.getcwd() + "/recipes-JP.txt","r")
 	recipeList = {}
 	rawData = ""
 	for line in file:

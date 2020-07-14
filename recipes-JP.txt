@@ -1,0 +1,410 @@
+Shroom Fry
+---
+Dried Shroom
+Mushroom
+Poison Shroom
+Super Shroom
+Volt Shroom
+===
+Shroom Roast
+---
+Slow Shroom
+Life Shroom
+===
+Shroom Steak
+---
+Ultra Shroom
+===
+Honey Shroom
+---
+Mystery
+===
+Maple Shroom
+---
+Mushroom, Maple Syrup
+Volt Shroom, Maple Syrup
+Slow Shroom, Maple Syrup
+===
+Jelly Shroom
+---
+Mushroom, Jammin Jelly
+Volt Shroom, Jammin Jelly
+===
+Honey Super
+---
+Life Shroom, Honey Syrup
+Super Shroom, Honey Syrup
+===
+Maple Super
+---
+Super Shroom, Maple Syrup
+Life Shroom, Maple Syrup
+Jammin Jelly, Slow Shroom
+===
+Jelly Super
+---
+Life Shroom, Jammin Jelly
+Super Shroom, Jammin Jelly
+===
+Honey Ultra
+---
+Ultra Shroom, Honey Syrup
+===
+Maple Ultra
+---
+Ultra Shroom, Maple Syrup
+===
+Jelly Ultra
+---
+Ultra Shroom, Jammin Jelly
+===
+Zess Dinner
+---
+Mystery
+===
+Zess Special
+---
+Ultra Shroom, Fire Flower
+Ultra Shroom, Slow Shroom
+Healthy Salad, Ink Pasta
+Healthy Salad, Shroom Roast
+Healthy Salad, Spicy Pasta
+===
+Zess Deluxe
+---
+Shroom Steak, Healthy Salad
+===
+Spaghetti
+---
+Mystery
+===
+Koopasta
+---
+Mystery
+===
+Spicy Pasta
+---
+Hot Sauce, Spaghetti
+Hot Sauce, Koopasta
+===
+Ink Pasta
+---
+Inky Sauce, Spaghetti
+Inky Sauce, Koopasta
+Inky Sauce, Spicy Pasta
+===
+Spicy Soup
+---
+Mystery
+Fire Flower
+Snow Bunny
+Dried Bouquet
+===
+Fried Egg
+---
+Mystery
+Mystic Egg
+===
+Omelette Meal
+---
+Mystic Egg, Mushroom
+Mystic Egg, Super Shroom
+Mystic Egg, Life Shroom
+Mystic Egg, Ultra Shroom
+===
+Koopa Bun
+---
+Keel Mango, Turtley Leaf
+===
+Healthy Salad
+---
+Turtley Leaf, Golden Leaf
+===
+Meteor Meal
+---
+Shroom Fry, Shooting Star
+Shroom Roast, Shooting Star
+Shroom Steak, Shooting Star
+===
+Couples Cake
+---
+Snow Bunny, Spicy Soup
+===
+Mousse Cake
+---
+Cake Mix
+===
+Shroom Cake
+---
+Mushroom, Cake Mix
+Super Shroom, Cake Mix
+Life Shroom, Cake Mix
+Slow Shroom, Cake Mix
+===
+Choco Cake
+---
+Cake Mix, Inky Sauce
+Mousse Cake, Inky Sauce
+===
+Heartful Cake
+---
+Cake Mix, Ruin Powder
+Peachy Peach, Ruin Powder
+===
+Fruit Parfait
+---
+Keel Mango, Honey Syrup
+Keel Mango, Jammin Jelly
+Keel Mango, Maple Syrup
+Keel Mango, Peachy Peach
+Peachy Peach, Honey Syrup
+Peachy Peach, Jammin Jelly
+Peachy Peach, Maple Syrup
+===
+Mango Delight
+---
+Keel Mango, Cake Mix
+===
+Love Pudding
+---
+Mystic Egg, Mango Delight
+===
+Zess Cookie
+---
+Mystery
+===
+Shroom Crepe
+---
+Ultra Shroom, Cake Mix
+===
+Peach Tart
+---
+Peachy Peach, Cake Mix
+===
+Koopa Tea
+---
+Mystery
+Turtley Leaf
+===
+Zess Tea
+---
+Mystery
+Golden Leaf
+===
+Shroom Broth
+---
+Golden Leaf, Poison Shroom
+Golden Leaf, Slow Shroom
+Turtley Leaf, Slow Shroom
+===
+Fresh Juice
+---
+Mystery
+Honey Syrup
+Jammin Jelly
+Keel Mango
+Maple Syrup
+Peachy Peach
+===
+Inky Sauce
+---
+Hot Sauce, Fresh Juice
+Hot Sauce, Koopa Tea
+Hot Sauce, Turtley Leaf
+Hot Sauce, Zess Tea
+Hot Sauce, Tasty Tonic
+Hot Sauce, Shroom Broth
+===
+Icicle Pop
+---
+Honey Syrup, Ice Storm
+===
+Zess Frappe
+---
+Ice Storm, Maple Syrup
+Ice Storm, Jammin Jelly
+===
+Snow Bunny
+---
+Ice Storm, Golden Leaf
+===
+Coco Candy
+---
+Cake Mix, Coconut
+===
+Honey Candy
+---
+Honey Syrup, Cake Mix
+===
+Jelly Candy
+---
+Jammin Jelly, Cake Mix
+===
+Electro Pop
+---
+Cake Mix, Volt Shroom
+===
+Fire Pop
+---
+Cake Mix, Fire Flower
+Cake Mix, Hot Sauce
+===
+Space Food
+---
+Dried Bouquet, Cake Mix
+Dried Bouquet, Choco Cake
+Dried Bouquet, Coco Candy
+Dried Bouquet, Coconut
+Dried Bouquet, Couples Cake
+Dried Bouquet, Dried Shroom
+Dried Bouquet, Egg Bomb
+Dried Bouquet, Electro Pop
+Dried Bouquet, Fire Pop
+Dried Bouquet, Fresh Juice
+Dried Bouquet, Fried Egg
+Dried Bouquet, Fruit Parfait
+Dried Bouquet, Golden Leaf
+Dried Bouquet, Healthy Salad
+Dried Bouquet, Heartful Cake
+Dried Bouquet, Honey Candy
+Dried Bouquet, Honey Shroom
+Dried Bouquet, Honey Super
+Dried Bouquet, Honey Ultra
+Dried Bouquet, Hot Dog
+Dried Bouquet, Icicle Pop
+Dried Bouquet, Ink Pasta
+Dried Bouquet, Inky Sauce
+Dried Bouquet, Jammin Jelly
+Dried Bouquet, Jelly Candy
+Dried Bouquet, Jelly Shroom
+Dried Bouquet, Jelly Super
+Dried Bouquet, Jelly Ultra
+Dried Bouquet, Keel Mango
+Dried Bouquet, Koopa Bun
+Dried Bouquet, Koopa Tea
+Dried Bouquet, Koopasta
+Dried Bouquet, Life Shroom
+Dried Bouquet, Love Pudding
+Dried Bouquet, Mango Delight
+Dried Bouquet, Maple Shroom
+Dried Bouquet, Maple Super
+Dried Bouquet, Maple Syrup
+Dried Bouquet, Maple Ultra
+Dried Bouquet, Meteor Meal
+Dried Bouquet, Mistake
+Dried Bouquet, Mousse Cake
+Dried Bouquet, Mushroom
+Dried Bouquet, Mystic Egg
+Dried Bouquet, Omelette Meal
+Dried Bouquet, Peach Tart
+Dried Bouquet, Peachy Peach
+Dried Bouquet, Poison Shroom
+Dried Bouquet, Shroom Cake
+Dried Bouquet, Shroom Crepe
+Dried Bouquet, Shroom Fry
+Dried Bouquet, Shroom Roast
+Dried Bouquet, Shroom Steak
+Dried Bouquet, Slow Shroom
+Dried Bouquet, Snow Bunny
+Dried Bouquet, Spaghetti
+Dried Bouquet, Spicy Pasta
+Dried Bouquet, Spicy Soup
+Dried Bouquet, Super Shroom
+Dried Bouquet, Turtley Leaf
+Dried Bouquet, Ultra Shroom
+Dried Bouquet, Zess Cookie
+Dried Bouquet, Zess Deluxe
+Dried Bouquet, Zess Dinner
+Dried Bouquet, Zess Frappe
+Dried Bouquet, Zess Special
+Dried Bouquet, Zess Tea
+===
+Poison Shroom
+---
+Inky Sauce, Slow Shroom
+Trial Stew, Dried Bouquet
+===
+Trial Stew
+---
+Poison Shroom, Couples Cake
+Thunder Rage, Thunder Bolt
+===
+Courage Meal
+---
+Courage Shell, Zess Dinner
+Courage Shell, Zess Deluxe
+Courage Shell, Zess Special
+===
+Coconut Bomb
+---
+Coconut, Fire Flower
+===
+Egg Bomb
+---
+Mystery
+===
+Zess Dynamite
+---
+Egg Bomb, Coconut Bomb
+===
+Mistake
+---
+Shroom Roast
+Shroom Steak
+Honey Shroom
+Maple Shroom
+Jelly Shroom
+Honey Super
+Maple Super
+Jelly Super
+Honey Ultra
+Maple Ultra
+Jelly Ultra
+Zess Dinner
+Zess Special
+Zess Deluxe
+Spaghetti
+Koopasta
+Spicy Pasta
+Ink Pasta
+Spicy Soup
+Fried Egg
+Omelette Meal
+Koopa Bun
+Healthy Salad
+Meteor Meal
+Couples Cake
+Mousse Cake
+Shroom Cake
+Choco Cake
+Heartful Cake
+Fruit Parfait
+Mango Delight
+Love Pudding
+Zess Cookie
+Shroom Crepe
+Peach Tart
+Koopa Tea
+Zess Tea
+Shroom Broth
+Fresh Juice
+Inky Sauce
+Icicle Pop
+Zess Frappe
+Snow Bunny
+Coco Candy
+Honey Candy
+Jelly Candy
+Electro Pop
+Fire Pop
+Space Food
+Poison Shroom
+Trial Stew
+Courage Meal
+Coconut Bomb
+Egg Bomb
+Zess Dynamite
+===
+Dried Bouquet
+---
+Hot Dog, Mousse Cake
