@@ -10,13 +10,13 @@ def initLogging():
 initLogging()
 
 def log(level, process, subProcess, activity, entry):
-    	if(int(getConfig("logLevel")) >= level):
-    		if(activity != ""):
-    			formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "][" + subProcess + "][" + activity + "] " + entry + "\n"
+	if(int(getConfig("logLevel")) >= level):
+		if(activity != ""):
+			formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "][" + subProcess + "][" + activity + "] " + entry + "\n"
 		elif(subProcess != ""):
-    			formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "][" + subProcess + "] " + entry + "\n"
+			formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "][" + subProcess + "] " + entry + "\n"
 		else:
-    		   formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "] " + entry + "\n"
+		   formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "] " + entry + "\n"
 		mmLogFileObject.write(formattedEntry)
 		mmLogFileObject.flush()
 		print(formattedEntry, sys.stdout.flush())

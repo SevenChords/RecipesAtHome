@@ -1,1 +1,8 @@
 .vscode/settings.json
+__pycache__/calculator.cpython-37.pyc
+__pycache__/config.cpython-37.pyc
+__pycache__/inventory.cpython-37.pyc
+__pycache__/logger.cpython-37.pyc
+__pycache__/recipes.cpython-37.pyc
+__pycache__/moves.cpython-37.pyc
+calculateRecipeOrder.log
