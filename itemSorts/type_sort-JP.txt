@@ -1,3 +1,5 @@
+Item
+[Koopa Curse]
 Mushroom
 Super Shroom
 Ultra Shroom
@@ -9,6 +11,7 @@ Maple Syrup
 Jammin Jelly
 Gradual Syrup
 Tasty Tonic
+POW Block
 Fire Flower
 Ice Storm
 Earth Quake
@@ -19,9 +22,24 @@ Volt Shroom
 Repel Cape
 Boos Sheet
 Ruin Powder
+Sleepy Sheep
+Dizzy Dial
+Stopwatch
+Power Punch
+Mini Mr. Mini
 Courage Shell
+Mr. Softener
+[Trade Off]
+HP Drain
+Point Swap
+Fright Mask
 Mystery
+Inn Coupon
+Gold Bar
+Gold Bar x 3
+Whacka Bump
 Hot Dog
+[Cake]
 Coconut
 Dried Bouquet
 Mystic Egg
@@ -31,6 +49,7 @@ Fresh Pasta
 Cake Mix
 Hot Sauce
 Turtley Leaf
+Horsetail
 Peachy Peach
 Spite Pouch
 Shroom Fry
