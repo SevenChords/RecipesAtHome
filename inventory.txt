@@ -1,7 +1,6 @@
 Golden Leaf
 Peachy Peach
 Shooting Star
-Fire Flower
 Ultra Shroom
 Cake Mix
 Thunder Rage
@@ -12,6 +11,7 @@ Slow Shroom
 Mystery
 Honey Syrup
 Volt Shroom
+Fire Flower
 Mystic Egg
 Hot Dog
 Ruin Powder
