@@ -1,6 +1,5 @@
 import copy
 import random
-from math import floor
 from logger import log
 from inventory import getAlphaSort, getTypeSort, checkIngredients, remainingOutputsCanBeFulfilled
 from moves import getInsertionIndex
@@ -104,8 +103,18 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 		inventory = [startingInventory]
 		outputCreated = [[False]*58]
 		legalMoves = []
+
+		step_RECORD = -1
+
 		while(iterationCount < 100000000):
 	
+			iterationCount += 1
+
+			if(stepIndex > step_RECORD):
+				step_RECORD = stepIndex
+				print(step_RECORD)
+				printResults("results/DebugRoadmap.txt",writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
+
 			#Check for bad states to immediately retreat from
 			if((not outputCreated[stepIndex][57] and (
 				not "Fire Flower" in inventory[stepIndex] or
@@ -146,7 +155,7 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					#Log the updated outcome
 					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
 
-					#return [totalFrames[stepIndex], callNumber]
+					return [totalFrames[stepIndex], callNumber]
 						
 				#Regardless of record status, its time to go back up and find new endstates
 				#Wipe away the current state
@@ -235,9 +244,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 									#There are some configurations where it is 2 frames faster to pick the ingredients in the reverse order
 									if((ingredientLoc[0]-ingredientOffset[0] >= 2 and
 									    ingredientLoc[0]                     >  ingredientLoc[1] and
-										ingredientLoc[0]-ingredientOffset[0] <= floor(viableItems/2)) or
+										ingredientLoc[0]-ingredientOffset[0] <= (viableItems//2)) or
 									   (ingredientLoc[0]                     <  ingredientLoc[1] and
-									    ingredientLoc[0]-ingredientOffset[0] >= floor(viableItems/2))):
+									    ingredientLoc[0]-ingredientOffset[0] >= (viableItems//2))):
 										#It's faster to select the 2nd item, so make it the priority and switch the order
 										ingredientLoc.reverse()
 										ingredientOffset.reverse()
@@ -386,7 +395,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 										#Get the index on where to insert this legal move to
 										insertIndex = getInsertionIndex(legalMoves, stepIndex, tempframetotal)
 
-
 										#Describe how the break should play out
 										ch5description = "Ch.5 Break: DB auto-slot {0}, CO auto-slot {1}, KM auto-slot {2}, CS auto-slot {3}".format(tempindexDB+1,
 																																					  tempindexCO+1,
@@ -400,7 +408,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 								else:
 									#No NULLS to allocate the Courage Shell
 
-
 									#Determine how many viable locations are available
 									viableItems = 20 - (tempInventory.count("BLOCKED"))
 							
@@ -413,7 +420,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 											#Potentially Viable Inventory, allocate the items
 											replacedInventory = copy.copy(tempInventory)
 											replacedInventory[tempindexCS] = "Courage Shell"									   
-
 
 											#Check that this state is viable
 											if(remainingOutputsCanBeFulfilled(replacedInventory, tempOutputsFulfilled, recipeList, itemNames)):
@@ -502,10 +508,8 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 											replacedInventory[tempindexKM] = "Keel Mango"
 											replacedInventory[tempindexCS] = "Courage Shell"
 
-
 											#Check that this state is viable
 											if(remainingOutputsCanBeFulfilled(replacedInventory, tempOutputsFulfilled, recipeList, itemNames)):
-
 
 												#Calculate the temp frames
 												tempFramesCO = tossFrames + invFrames[viableItems][tempindexCO]
@@ -526,14 +530,12 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 																							 58,
 																							 tempframetotal,
 																							 replacedInventory])
-									
-									
+												
 					else:
 						#No NULLS to allocate the Dried Bouquet, Coconut, Keel Mango, or Courage Shell!
 					
 						#Determine how many viable locations are available
 						viableItems = 20 - (tempInventory.count("BLOCKED"))
-
 
 						#See which inventory slots can be tossed to accommodate these items
 						for tempindexDB in range(0,10):
@@ -554,10 +556,8 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 											replacedInventory[tempindexKM] = "Keel Mango"
 											replacedInventory[tempindexCS] = "Courage Shell"
 
-
 											#Check that this state is viable
 											if(remainingOutputsCanBeFulfilled(replacedInventory, tempOutputsFulfilled, recipeList, itemNames)):
-
 
 												#Calculate the temp frames
 												tempFramesDB = tossFrames + invFrames[viableItems][tempindexDB]
@@ -659,11 +659,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 						for i in range(19-totalBLOCKED,-1,-1):
 							reversetypeinventory.append(typeinventory[i])
 
-
 						#Remaining spaces are "Blocked"
 						while(len(reversetypeinventory) < 20):
 							reversetypeinventory.append("BLOCKED")
-
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(reversetypeinventory != inventory[stepIndex]):
@@ -671,11 +669,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							while(tempindex < len(legalMoves[stepIndex]) and legalMoves[stepIndex][tempindex][2] < reverseTypeSortFrames):
 								tempindex += 1
 
-
 							description = "Sort - Reverse Type"
 							#legalMoves[stepIndex].insert(tempindex,[description,-1,reverseTypeSortFrames,reversetypeinventory])
 							legalMoves[stepIndex].append([description,-1,reverseTypeSortFrames,reversetypeinventory])
-
 
 				#Filter out all legal moves that would exceed the current frame limit
 				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < currentFrameRecord, legalMoves[stepIndex]))
@@ -684,18 +680,14 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 				if(stepIndex == 0):
 					legalMoves[stepIndex] = list(filter(lambda x: not " and " in x[0], legalMoves[stepIndex]))
 
-
 				#Just because, if the step index is sufficiently small, just shuffle!
-				if(randomise):
-					if(stepIndex < 20):
-						random.shuffle(legalMoves[stepIndex])
-
+				if(randomise and stepIndex < 20):
+					random.shuffle(legalMoves[stepIndex])
 
 				#Interesting methodology to pick out decent legal moves
-				if(select):
-					while(len(legalMoves[stepIndex]) > 1 and random.random() < 0.1):
+				if(select and stepIndex < 30) :
+					while(len(legalMoves[stepIndex]) > 1 and random.random() < 0.15):
 						legalMoves[stepIndex].pop(-1)
-
 
 				if(len(legalMoves[stepIndex]) == 0):
 					#There are no legal moves to iterate on, go back up...
@@ -707,7 +699,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					outputCreated.pop()
 					legalMoves.pop()
 
-
 					#Step back up a level
 					stepIndex -= 1
 				else:
@@ -718,26 +709,21 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					inventory.append(legalMoves[stepIndex][0][3])
 					outputCreated.append(copy.copy(outputCreated[stepIndex]))
 
-
 					if(legalMoves[stepIndex][0][1] >= 0):
 						outputCreated[stepIndex + 1][legalMoves[stepIndex][0][1]-1] = True
-
 
 					stepIndex += 1
 			else:
 				#Pop the 1st instance of the list, as it has already been recursed down
 				legalMoves[stepIndex].pop(0)
 
-
 				#Filter out all legal moves that would exceed the current frame limit
 				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < currentFrameRecord, legalMoves[stepIndex]))
-
 
 				#Just because, if the step index is sufficiently small, just shuffle!
 				if(randomise):
 					if(stepIndex < 20):
 						random.shuffle(legalMoves[stepIndex])
-
 
 				if(len(legalMoves[stepIndex]) == 0):
 					#No legal moves are left to evaluate, go back up...
@@ -749,7 +735,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					outputCreated.pop()
 					legalMoves.pop()
 
-
 					#Step back up a level
 					stepIndex -= 1
 				else:
@@ -760,10 +745,8 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					inventory.append(legalMoves[stepIndex][0][3])
 					outputCreated.append(copy.copy(outputCreated[stepIndex]))
 
-
 					if(legalMoves[stepIndex][0][1] >= 0):
 						outputCreated[stepIndex + 1][legalMoves[stepIndex][0][1]-1] = True
-
 
 					stepIndex += 1
 					#logging for progress display
@@ -773,4 +756,3 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
 					elif(iterationCount % 1000 == 0):
 						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
-					iterationCount += 1
