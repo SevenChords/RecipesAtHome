@@ -1,5 +1,6 @@
 import copy
 import random
+from math import floor
 from logger import log
 from inventory import getAlphaSort, getTypeSort, checkIngredients, remainingOutputsCanBeFulfilled
 from moves import getInsertionIndex
@@ -144,12 +145,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					#print("New Record Time: {0}".format(totalFrames[stepIndex]))
 					#Log the updated outcome
 					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
-					#pause after each new record to check results
-					#rawinput()
-					return [totalFrames[stepIndex], callNumber]
+
+					#return [totalFrames[stepIndex], callNumber]
 						
-
-
 				#Regardless of record status, its time to go back up and find new endstates
 				#Wipe away the current state
 				writtenStep.pop()
@@ -158,16 +156,13 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 				inventory.pop()
 				outputCreated.pop()
 
-
 				#Step back up a level
 				stepIndex -= 1
-
 
 			#End condition not met, Check if this current level has something in the event queue
 			elif(len(legalMoves) == stepIndex):
 				legalMoves.append([])
 				#Generate the list of all possible decisions
-
 
 				#Only evaluate the 57th recipe (Mistake) when its the last recipe to fulfill
 				# This is because it is relatively easy to craft this output with many of the previous outputs, and will take minimal frames
@@ -186,7 +181,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 								#This is a recipe that can be fulfilled right now!
 								tempInventory = copy.copy(inventory[stepIndex])
 
-
 								#Mark that the output has been fulfilled for viability determination
 								tempOutputsFulfilled = copy.copy(outputCreated[stepIndex])
 								tempOutputsFulfilled[outputItem-1] = True
@@ -194,11 +188,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 								if(len(recipe) == 1):
 									#This is a potentially viable recipe with 1 ingredient
 
-
 									#Determine how many viable items are in the list (No Nulls or Blocked), and the location of the ingredient
 									viableItems = 20 - (tempInventory.count("NULL")+tempInventory.count("BLOCKED"))
 									ingredientLoc = tempInventory.index(recipe[0])
-
 
 									#Determine the offset by "NULL"s before the desired item, as NULLs do not appear during inventory navigation
 									ingredientOffset = 0
@@ -206,15 +198,12 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 										if(tempInventory[i] == "NULL"):
 											ingredientOffset += 1
 
-
 									#Modify the inventory if the ingredient was in the first 10 slots
 									if(ingredientLoc < 10):
 										tempInventory[ingredientLoc] = "NULL"
 
-
 									#Determine how many frames will be needed to select that item  
 									tempFrames = invFrames[viableItems][ingredientLoc-ingredientOffset]
-
 
 									#Describe what items were used
 									useDescription = "Use {0} in slot {1} ".format(recipe[0],ingredientLoc+1)
@@ -223,74 +212,61 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 									#Baseline frames based on how many times we need to access the menu
 									tempFrames = chooseSecondIngredientFrames
 
-
 									#Mark that the output has been fulfilled
 									tempOutputsFulfilled = copy.copy(outputCreated[stepIndex])
 									tempOutputsFulfilled[outputItem - 1] = True
 
-
 									#Determine how many viable spaces there are and the locations of both ingredients
 									viableItems = 20 - (tempInventory.count("NULL")+tempInventory.count("BLOCKED")) 
 									ingredientLoc = [tempInventory.index(recipe[0]),
-													  tempInventory.index(recipe[1])]
+													 tempInventory.index(recipe[1])]
 
+									ingredientName = [recipe[0],recipe[1]]
+									ingredientOffset = [0,0]
 
-									ingredientName0 = recipe[0]
-									ingredientName1 = recipe[1]
+									for ingred_eval in range(len(ingredientName)):
+										ingredientOffset[ingred_eval] = 0
+										for i in range(0,ingredientLoc[ingred_eval]):
+											if(tempInventory[i] == "NULL"):
+												ingredientOffset[ingred_eval] += 1
 
-
-									ingredientOffset0 = 0
-									for i in range(0,ingredientLoc[0]):
-										if(tempInventory[i] == "NULL"):
-											ingredientOffset0 += 1
-
-
-									ingredientOffset1 = 0
-									for i in range(0,ingredientLoc[1]):
-										if(tempInventory[i] == "NULL"):
-											ingredientOffset1 += 1
-
-
-									#Determine which order of ingredients to take (Always take the quickest 1st)
-									if(invFrames[viableItems][ingredientLoc[1]-ingredientOffset1] < invFrames[viableItems][ingredientLoc[0]-ingredientOffset0]):
+									#Determine which order of ingredients to take
+									#The first picked item always vanishes from the list of ingredients when picking the 2nd ingredient
+									#There are some configurations where it is 2 frames faster to pick the ingredients in the reverse order
+									if((ingredientLoc[0]-ingredientOffset[0] >= 2 and
+									    ingredientLoc[0]                     >  ingredientLoc[1] and
+										ingredientLoc[0]-ingredientOffset[0] <= floor(viableItems/2)) or
+									   (ingredientLoc[0]                     <  ingredientLoc[1] and
+									    ingredientLoc[0]-ingredientOffset[0] >= floor(viableItems/2))):
 										#It's faster to select the 2nd item, so make it the priority and switch the order
 										ingredientLoc.reverse()
-
-
-										#Flip the ingredient offsets too (TODO: Make less awful)
-										temp = ingredientOffset0
-										ingredientOffset0 = ingredientOffset1
-										ingredientOffset1 = temp
-
-
-										ingredientName0 = recipe[1]
-										ingredientName1 = recipe[0]
-
+										ingredientOffset.reverse()
+										ingredientName.reverse()
 
 									#Calculate the number of frames needed to grab the first item
-									tempFrames += invFrames[viableItems][ingredientLoc[0]-ingredientOffset0]
-
+									tempFrames += invFrames[viableItems][ingredientLoc[0]-ingredientOffset[0]]
 
 									#Set this inventory index to null if the item was in the first 10 slots
 									#Also determine the frames needed for the 2nd ingredient
 									if(ingredientLoc[0] < 10):
 										tempInventory[ingredientLoc[0]] = "NULL"
-										tempFrames += invFrames[viableItems-1][ingredientLoc[1]-ingredientOffset1-1]
+										#print("---")
+										#print(ingredientLoc)
+										#print(ingredientOffset)
+										#print(viableItems)
+										tempFrames += invFrames[viableItems-1][ingredientLoc[1]-ingredientOffset[1]-1]
 									else:
-										tempFrames += invFrames[viableItems-0][ingredientLoc[1]-ingredientOffset1-0]
-
+										tempFrames += invFrames[viableItems-0][ingredientLoc[1]-ingredientOffset[1]-0]
 
 									#Set this inventory index to null if the item was in the first 10 slots
 									if(ingredientLoc[1] < 10):
 										tempInventory[ingredientLoc[1]] = "NULL"
 
-
 									#Describe what items were used
-									useDescription = "Use {0} in slot {1} and {2} in slot {3} ".format(ingredientName0,
-																										ingredientLoc[0]+1,
-																										ingredientName1,
-																										ingredientLoc[1]+1)
-
+									useDescription = "Use {0} in slot {1} and {2} in slot {3} ".format(ingredientName[0],
+																									   ingredientLoc[0]+1,
+																									   ingredientName[1],
+																									   ingredientLoc[1]+1)
 
 								#Handle allocation of the OUTPUT variable
 								#Options vary by whether there are "NULL"s within the inventory
@@ -298,16 +274,13 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 									#If there are NULLs in the inventory. The output will always go to 1st NULL in the inventory 
 									placedIndex = tempInventory.index("NULL")
 
-
 									tempInventory[placedIndex] = recipeList[outputItem]["NAME"]
-
 
 									#Check to see if this state is viable
 									if(remainingOutputsCanBeFulfilled(tempInventory, tempOutputsFulfilled, recipeList, itemNames)):
 										#This is a viable state that doesn't increase frames at all (Output was auto-placed)
 										#Determine where to insert this legal move into the list of legal moves (Sorted by frames taken)
 										insertIndex = getInsertionIndex(legalMoves, stepIndex, tempFrames)
-
 
 										placeDescription = "to make {0}, auto-placed in slot {1}".format(itemNames[outputItem-1],placedIndex+1)
 										legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,tempFrames,tempInventory])
@@ -325,7 +298,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 										placeDescription = "to make (and toss) {0}".format(itemNames[outputItem-1])
 										legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,tempFrames,tempInventory])
 
-
 									#Evaluate the viability of tossing all current inventory items
 									#Assumed that it is impossible to toss and replace any items in the last 10 positions
 									for tossedIndex in range(0,10):
@@ -338,7 +310,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 										replacedInventory = copy.copy(tempInventory)
 										replacedInventory[tossedIndex] = itemNames[outputItem-1]
 										tossedItemName = tempInventory[tossedIndex]
-
 
 										if(remainingOutputsCanBeFulfilled(replacedInventory, tempOutputsFulfilled, recipeList, itemNames)):
 											#Calculate the additional tossed frames. Have to +1 both viableItems and tosseditem as
@@ -362,7 +333,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					tempOutputsFulfilled = copy.copy(outputCreated[stepIndex])
 					tempOutputsFulfilled[57] = True
 
-
 					#Create a temp inventory
 					tempInventory = copy.copy(inventory[stepIndex])
 					tempFramesDB = 0 #Dried Bouquet
@@ -370,12 +340,10 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					tempFramesKM = 0 #Keel Mango
 					tempFramesCS = 0 #Courage Shell
 
-
 					tempindexDB = 0 #Dried Bouquet
 					tempindexCO = 0 #Coconut
 					tempindexKM = 0 #Keel Mango
 					tempindexCS = 0 #Courage Shell			
-
 
 					#If the Mousse Cake is in the first 10 spots, change it to a null
 					moussecakeloc = tempInventory.index("Mousse Cake")
@@ -389,14 +357,12 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 						tempindexDB = tempInventory.index("NULL")
 						tempInventory[tempindexDB] = "Dried Bouquet"
 
-
 						#Allocate the Coconut
 						if("NULL" in tempInventory):
 							#Coconut goes in the 2nd NULL spot, no frames taken
 							tempFramesCO = 0
 							tempindexCO = tempInventory.index("NULL")
 							tempInventory[tempindexCO] = "Coconut"
-
 
 							#Allocate the Keel Mango
 							if("NULL" in tempInventory):
@@ -405,20 +371,17 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 								tempindexKM = tempInventory.index("NULL")
 								tempInventory[tempindexKM] = "Keel Mango"
 
-
 								#Allocate the Courage Shell
 								if("NULL" in tempInventory):
 									#Courage Shell goes in the 4th NULL spot, no frames taken
 									tempFramesCS = 0
-									tmepindexCS = tempInventory.index("NULL")
+									tempindexCS = tempInventory.index("NULL")
 									tempInventory[tempindexCS] = "Courage Shell"
-
 
 									#Check that this state is viable
 									if(remainingOutputsCanBeFulfilled(tempInventory, tempOutputsFulfilled, recipeList, itemNames)):
 										#Total Relevant frames that will be taken by this intermission
 										tempframetotal = tempFramesDB + tempFramesCO + tempFramesKM + tempFramesCS
-
 
 										#Get the index on where to insert this legal move to
 										insertIndex = getInsertionIndex(legalMoves, stepIndex, tempframetotal)
@@ -621,12 +584,10 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 				#Don't sort if the previous move was a sort (Redundant)
 				if(writtenStep[stepIndex][0:4] != "Sort"):
 
-
 					totalsorts = 0
 					for i in range(0,stepIndex+1):
 						if(writtenStep[i][0:4] == "Sort"):
 							totalsorts += 1
-
 
 					#Only want max 5 sorts
 					if(totalsorts <= 5):
@@ -634,17 +595,14 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 						alphainventory = []
 						totalBLOCKED = 0
 
-
 						for i in range(0,len(alphaSort)):
 							for j in range(0,inventory[stepIndex].count(alphaSort[i])):
 								alphainventory.append(alphaSort[i])
-
 
 						#Remaining Spaces are "Blocked"
 						while(len(alphainventory) < 20):
 							alphainventory.append("BLOCKED")
 							totalBLOCKED += 1
-
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(alphainventory != inventory[stepIndex]):
@@ -652,22 +610,18 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							while(tempindex < len(legalMoves[stepIndex]) and legalMoves[stepIndex][tempindex][2] < alphaSortFrames):
 								tempindex += 1
 
-
 							description = "Sort - Alphabetical"
 							#legalMoves[stepIndex].insert(tempindex,[description,-1,alphaSortFrames,alphainventory])
 							legalMoves[stepIndex].append([description,-1,alphaSortFrames,alphainventory])
-
 
 						#Reverse Alphabetical Sort
 						reversealphainventory = []
 						for i in range(19-totalBLOCKED,-1,-1):
 							reversealphainventory.append(alphainventory[i])			 
 
-
 						#Remaining spaces are "Blocked"
 						while(len(reversealphainventory) < 20):
 							reversealphainventory.append("BLOCKED")
-
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(reversealphainventory != inventory[stepIndex]):
@@ -675,25 +629,20 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							while(tempindex < len(legalMoves[stepIndex]) and legalMoves[stepIndex][tempindex][2] < reverseAlphaSortFrames):
 								tempindex += 1
 
-
 							description = "Sort - Reverse Alphabetical"
 							#legalMoves[stepIndex].insert(tempindex,[description,-1,reversAlphaSortFrames,reversealphainventory])
 							legalMoves[stepIndex].append([description,-1,reverseAlphaSortFrames,reversealphainventory])
 
-
 						#Type Sort
 						typeinventory = []
-
 
 						for i in range(0,len(typeSort)):
 							for j in range(0,inventory[stepIndex].count(typeSort[i])):
 								typeinventory.append(typeSort[i])
 
-
 						#Remaining Spaces are "Blocked"
 						while(len(typeinventory) < 20):
 							typeinventory.append("BLOCKED")
-
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(typeinventory != inventory[stepIndex]):
@@ -701,11 +650,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							while(tempindex < len(legalMoves[stepIndex]) and legalMoves[stepIndex][tempindex][2] < typeSortFrames):
 								tempindex += 1
 
-
 							description = "Sort - Type"
 							#legalMoves[stepIndex].insert(tempindex,[description,-1,typeSortFrames,typeinventory])
 							legalMoves[stepIndex].append([description,-1,typeSortFrames,typeinventory])
-
 
 						#Reverse Type Sort
 						reversetypeinventory = []
