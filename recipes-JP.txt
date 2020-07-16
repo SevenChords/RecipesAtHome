@@ -23,6 +23,7 @@ Maple Shroom
 ---
 Mushroom, Maple Syrup
 Volt Shroom, Maple Syrup
+Slow Shroom, Maple Syrup
 ===
 Jelly Shroom
 ---
@@ -37,6 +38,8 @@ Super Shroom, Honey Syrup
 Maple Super
 ---
 Super Shroom, Maple Syrup
+Life Shroom, Maple Syrup
+Jammin Jelly, Slow Shroom
 ===
 Jelly Super
 ---
@@ -62,7 +65,7 @@ Mystery
 Zess Special
 ---
 Ultra Shroom, Fire Flower
-Ultra Shroom, Peachy Peach
+Ultra Shroom, Slow Shroom
 Healthy Salad, Ink Pasta
 Healthy Salad, Shroom Roast
 Healthy Salad, Spicy Pasta
@@ -95,6 +98,7 @@ Spicy Soup
 Mystery
 Fire Flower
 Snow Bunny
+Dried Bouquet
 ===
 Fried Egg
 ---
@@ -135,6 +139,7 @@ Shroom Cake
 Mushroom, Cake Mix
 Super Shroom, Cake Mix
 Life Shroom, Cake Mix
+Slow Shroom, Cake Mix
 ===
 Choco Cake
 ---
@@ -190,6 +195,7 @@ Shroom Broth
 ---
 Golden Leaf, Poison Shroom
 Golden Leaf, Slow Shroom
+Turtley Leaf, Slow Shroom
 ===
 Fresh Juice
 ---
@@ -244,10 +250,13 @@ Cake Mix, Hot Sauce
 ===
 Space Food
 ---
+Dried Bouquet, Cake Mix
 Dried Bouquet, Choco Cake
-Dried Bouquet, Choco Candy
+Dried Bouquet, Coco Candy
 Dried Bouquet, Coconut
+Dried Bouquet, Couples Cake
 Dried Bouquet, Dried Shroom
+Dried Bouquet, Egg Bomb
 Dried Bouquet, Electro Pop
 Dried Bouquet, Fire Pop
 Dried Bouquet, Fresh Juice
@@ -272,9 +281,12 @@ Dried Bouquet, Jelly Ultra
 Dried Bouquet, Keel Mango
 Dried Bouquet, Koopa Bun
 Dried Bouquet, Koopa Tea
+Dried Bouquet, Koopasta
 Dried Bouquet, Life Shroom
+Dried Bouquet, Love Pudding
 Dried Bouquet, Mango Delight
 Dried Bouquet, Maple Shroom
+Dried Bouquet, Maple Super
 Dried Bouquet, Maple Syrup
 Dried Bouquet, Maple Ultra
 Dried Bouquet, Meteor Meal
@@ -283,12 +295,15 @@ Dried Bouquet, Mousse Cake
 Dried Bouquet, Mushroom
 Dried Bouquet, Mystic Egg
 Dried Bouquet, Omelette Meal
+Dried Bouquet, Peach Tart
 Dried Bouquet, Peachy Peach
+Dried Bouquet, Poison Shroom
 Dried Bouquet, Shroom Cake
 Dried Bouquet, Shroom Crepe
 Dried Bouquet, Shroom Fry
 Dried Bouquet, Shroom Roast
 Dried Bouquet, Shroom Steak
+Dried Bouquet, Slow Shroom
 Dried Bouquet, Snow Bunny
 Dried Bouquet, Spaghetti
 Dried Bouquet, Spicy Pasta
@@ -306,10 +321,12 @@ Dried Bouquet, Zess Tea
 Poison Shroom
 ---
 Inky Sauce, Slow Shroom
+Trial Stew, Dried Bouquet
 ===
 Trial Stew
 ---
 Poison Shroom, Couples Cake
+Thunder Rage, Thunder Bolt
 ===
 Courage Meal
 ---

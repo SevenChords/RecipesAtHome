@@ -1,7 +1,11 @@
+Item
+POW Block
 Icicle Pop
+Fright Mask
 Spicy Soup
 Ink Pasta
 Couples Cake
+Point Swap
 Space Food
 Ultra Shroom
 Golden Leaf
@@ -9,9 +13,11 @@ Cake Mix
 Courage Shell
 Courage Meal
 Thunder Bolt
+Thunder Rage
 Koopa Tea
 Turtley Leaf
 Koopasta
+[Koopa Curse]
 Koopa Bun
 Spicy Pasta
 Omelette Meal
@@ -22,21 +28,35 @@ Shroom Cake
 Shroom Steak
 Shroom Roast
 Shooting Star
+Gold Bar
+Gold Bar x 3
 Life Shroom
+Dizzy Dial
+[Cake]
 Shroom Broth
 Ice Storm
 Coconut Bomb
 Coco Candy
+Spite Pouch
 Mistake
 Dried Shroom
+Inn Coupon
 Choco Cake
 Trial Stew
 Slow Shroom
 Gradual Syrup
 Super Shroom
+HP Drain
 Tasty Tonic
+Stopwatch
 Spaghetti
 Inky Sauce
+Whacka Bump
+Horsetail
+[Trade Off]
+Repel Cape
+Boos Sheet
+Power Punch
 Keel Mango
 Poison Shroom
 Dried Bouquet
@@ -48,6 +68,7 @@ Zess Tea
 Zess Dinner
 Zess Deluxe
 Zess Frappe
+Sleepy Sheep
 Love Pudding
 Honey Candy
 Honey Shroom
@@ -62,6 +83,7 @@ Peachy Peach
 Fire Pop
 Fire Flower
 Mystic Egg
+Mr. Softener
 Fruit Parfait
 Fresh Juice
 Healthy Salad
@@ -69,6 +91,7 @@ Meteor Meal
 Hot Dog
 Ruin Powder
 Mango Delight
+Mini Mr. Mini
 Mousse Cake
 Maple Shroom
 Maple Super
@@ -78,6 +101,7 @@ Fried Egg
 Heartful Cake
 Coconut
 Snow Bunny
+Earth Quake
 Hot Sauce
 Jelly Shroom
 Jelly Super

@@ -10,7 +10,7 @@ def worker(workQueue, doneQueue):
 		job = workQueue.get(True)
 		#waiting for a job to appear
 		#in this case job refers to a single instance of calculating the recipe order
-		result =  calculateOrder(job[0], job[1], job[2], job[3], job[4])
+		result = calculateOrder(job[0], job[1], job[2], job[3], job[4])
 		#write the calculated result to the "done" queue
 		doneQueue.put(result, False)
 

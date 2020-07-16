@@ -13,26 +13,26 @@ from recipes import getRecipeList
 #log(5, "Inventory", "Items", "Scan", "All item names scanned successfully.")
 
 def getAlphaSort():
-	file = open(os.getcwd() + "/itemSorts/alphabetic.txt","r")
-	log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
+	file = open(os.getcwd() + "/itemSorts/alphabetic_sort-JP.txt","r")
+	#log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
 	sortList = []
 	for line in file:
 		sortList.append(line.strip("\n"))
-		log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
-	log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
-	log(5, "Inventory", "Sort", "Load", str(sortList))
+		#log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
+	#log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
+	#log(5, "Inventory", "Sort", "Load", str(sortList))
 	file.close()
 	return sortList
 
 def getTypeSort():
-	file = open(os.getcwd() + "/itemSorts/type.txt","r")
-	log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
+	file = open(os.getcwd() + "/itemSorts/type_sort-JP.txt","r")
+	#log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
 	sortList = []
 	for line in file:
 		sortList.append(line.strip("\n"))
-		log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
-	log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
-	log(5, "Inventory", "Sort", "Load", str(sortList))
+		#log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
+	#log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
+	#log(5, "Inventory", "Sort", "Load", str(sortList))
 	file.close()
 	return sortList
 
