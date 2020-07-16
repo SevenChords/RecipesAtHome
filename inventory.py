@@ -67,12 +67,12 @@ def getInventoryFrames():
 	log(5, "Inventory", "Frames", "Generate", str(invFrames))
 	return invFrames
 
-def checkRecipe(recipe, inventoryLocal, outputCreated, dependentIndices,
+def checkRecipe(recipe, makeableItems, outputCreated, dependentIndices,
 				recipeList, itemNames):
 	#Determine if the recipe items can still be fulfilled
 	for itemName in recipe:
-		#Check if we already have the item
-		if itemName in inventoryLocal:
+		#Check if we already have the item or know we can make it
+		if itemName in makeableItems:
 			continue
 		try:
 			#Throws if item cannot ever be made
@@ -84,9 +84,10 @@ def checkRecipe(recipe, inventoryLocal, outputCreated, dependentIndices,
 				newDependentIndices = dependentIndices + [itemIndex]
 				#Recurse on all recipes that can make this item
 				for newRecipe in recipeList[itemIndex+1]["RECIPES"]:
-					if checkRecipe(newRecipe, inventoryLocal, outputCreated,
+					if checkRecipe(newRecipe, makeableItems, outputCreated,
 								   newDependentIndices, recipeList, itemNames):
 						#Stop looking for recipes to make the item
+						makeableItems.add(itemName)
 						break
 				#The item cannot be produced with the current inventory
 				else:
@@ -104,10 +105,11 @@ def checkRecipe(recipe, inventoryLocal, outputCreated, dependentIndices,
 def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList,
 								   itemNames):
 	#With the given inventory, can the remaining recipes be fulfilled?
+	makeableItems = set(inventoryLocal)
 	#If Chapter 5 has not been done, add the items it gives us
-	inventoryLocal = (inventoryLocal + ["Keel Mango", "Coconut",
-										"Dried Bouquet", "Courage Shell"]
-					  if not outputCreated[57] else inventoryLocal)
+	if not outputCreated[57]:
+		makeableItems.update(["Keel Mango", "Coconut", "Dried Bouquet",
+							  "Courage Shell"])
 	#Iterate through all output items that haven't been created
 	for outputItem in recipeList:
 		if(not outputCreated[outputItem-1]):
@@ -115,9 +117,10 @@ def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList,
 			dependentIndices = [outputItem-1]
 			#Check if any recipe to make the item can be fulfilled
 			for recipe in recipeList[outputItem]["RECIPES"]:
-				if checkRecipe(recipe, inventoryLocal, outputCreated,
+				if checkRecipe(recipe, makeableItems, outputCreated,
 							   dependentIndices, recipeList, itemNames):
 					#Stop looking for recipes to make the item
+					makeableItems.add(itemNames[outputItem-1])
 					break
 			#The item cannot be produced
 			else:
