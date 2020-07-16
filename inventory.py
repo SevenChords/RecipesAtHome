@@ -14,25 +14,25 @@ from recipes import getRecipeList
 
 def getAlphaSort():
 	file = open(os.getcwd() + "/itemSorts/alphabetic_sort-JP.txt","r")
-	log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
+	#log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
 	sortList = []
 	for line in file:
 		sortList.append(line.strip("\n"))
-		log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
-	log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
-	log(5, "Inventory", "Sort", "Load", str(sortList))
+		#log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
+	#log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
+	#log(5, "Inventory", "Sort", "Load", str(sortList))
 	file.close()
 	return sortList
 
 def getTypeSort():
 	file = open(os.getcwd() + "/itemSorts/type_sort-JP.txt","r")
-	log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
+	#log(2, "Inventory", "Sort", "Load", "Sort list loaded from file.")
 	sortList = []
 	for line in file:
 		sortList.append(line.strip("\n"))
-		log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
-	log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
-	log(5, "Inventory", "Sort", "Load", str(sortList))
+		#log(7, "Inventory", "Sort", "Load", line.strip("\n") + " added to sort list")
+	#log(2, "Inventory", "Sort", "Load", "Finished creating sort list.")
+	#log(5, "Inventory", "Sort", "Load", str(sortList))
 	file.close()
 	return sortList
 
@@ -107,15 +107,15 @@ def checkIngredients(recipe, inventoryLocal, outputCreated, recipeList, itemName
  			#This item is in the current inventory, do nothing for now
  			pass
  		elif item in itemNames and(not outputCreated[itemNames.index(item)]):
- 			tempGoodRecipe = False
  			for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
  				#Recurse on all recipes that can make this item
  				tempOutputCreated = copy.copy(outputCreated)
  				tempOutputCreated[itemNames.index(item)] = True
- 				tempGoodRecipe = tempGoodRecipe or checkIngredients(newRecipe, inventoryLocal, tempOutputCreated, recipeList, itemNames)
  				#log(7, "Inventory", "Recipe", "Check", str(newRecipe) + " has been evaluated.")
+				if checkIngredients(newRecipe, inventoryLocal, tempOutputCreated, recipeList, itemNames):
+					break
  			#After evaluating all recipes of the item, if that item cannot be produced, return false
- 			if(not tempGoodRecipe):
+ 			else:
  				#log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
  				return False
  		else:
@@ -127,32 +127,26 @@ def checkIngredients(recipe, inventoryLocal, outputCreated, recipeList, itemName
 
 def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList, itemNames):
 	#With the given inventory, can the remaining recipes be fulfilled?
+
+	#If Chapter 5 has not been done, add the items it gives us into consideration
+	if(not outputCreated[57]):
+		inventoryLocal = inventoryLocal + ["Dried Bouquet", "Coconut", "Keel Mango", "Courage Shell"]
+
 	#Iterate through all remaining output items
 	for outputItem in recipeList:
 		#Only want output items that haven't already been created elsewhere
 		if(not outputCreated[outputItem-1]):
 			#Iterate through all recipes
-			viableIngredientsFound = False
 			for recipe in recipeList[outputItem]["RECIPES"]:
-			#This is done to avoid infinite recursion
-			#TODO: Check if there's a more efficient algorithm
+				#This is done to avoid infinite recursion
+				#TODO: Check if there's a more efficient algorithm
 				tempOutputCreated = copy.copy(outputCreated)
 				tempOutputCreated[outputItem-1] = True
-				viableIngredientsFound = viableIngredientsFound or checkIngredients(recipe, inventoryLocal, tempOutputCreated, recipeList, itemNames)
-			if(not viableIngredientsFound):
-				#There's a few exceptions
-				if(outputCreated[57]):
-					#the 58th "output" is really a representation of the Chapter 5 Intermission
-					#Where the Keel Mango and Coconut are collected, so a few recipes before this intermission won't be viable
-					#If chapter 5 has been done, then there's no exceptions anymore
-					return False
-				elif(recipeList[outputItem]["NAME"] in ["Zess Dinner", "Koopa Bun", "Fruit Parfait", "Mango Delight", "Love Pudding", "Fresh Juice", "Coco Candy", "Courage Meal", "Coconut Bomb", "Zess Dynamite"]):
-					#This has flaws, but any items that need Keel Mangos or Coconuts
-					#will be considered fine for pre-Chapter-5 evaluation
-					pass
-				else:
-					#Any other output items will need something that we *should* have
-					return False
+				if checkIngredients(recipe, inventoryLocal, tempOutputCreated, recipeList, itemNames):
+					break
+			else:
+				return False
+
 		#log(7, "Inventory", "Recipe", "Check", str(recipeList[outputItem]["NAME"]) + " has been evaluated.")
 	#haven't returned False in evaluating all output items
 	#Meaning that all remeining outputs can still be fulfilled!
