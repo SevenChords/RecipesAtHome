@@ -67,26 +67,36 @@ def getInventoryFrames():
 	log(5, "Inventory", "Frames", "Generate", str(invFrames))
 	return invFrames
 
-def checkRecipe(recipe, inventoryLocal, outputCreated, recipeList, itemNames):
+def checkRecipe(recipe, inventoryLocal, outputCreated, dependentIndices,
+				recipeList, itemNames):
 	#Determine if the recipe items can still be fulfilled
-	for item in recipe:
+	for itemName in recipe:
 		#Check if we already have the item
-		if item in inventoryLocal:
-			pass
-		#Check if it can be made but hasn't been
-		elif item in itemNames and not outputCreated[itemNames.index(item)]:
-			for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
+		if itemName in inventoryLocal:
+			continue
+		try:
+			#Throws if item cannot ever be made
+			itemIndex = itemNames.index(itemName)
+			#Check if it hasn't been made and doesn't depend on any item
+			#it is needed to make
+			if not (outputCreated[itemIndex] or itemIndex in dependentIndices):
+				#Anything made for this item cannot depend on it
+				newDependentIndices = dependentIndices + [itemIndex]
 				#Recurse on all recipes that can make this item
-				tempOutputCreated = copy.copy(outputCreated)
-				tempOutputCreated[itemNames.index(item)] = True
-				if checkRecipe(newRecipe, inventoryLocal, tempOutputCreated,
-							   recipeList, itemNames):
-					break
-			#The item cannot be produced with the current inventory
-			else:
-				return False
-		else:
-			#The item cannot be made or was thrown out
+				for newRecipe in recipeList[itemIndex+1]["RECIPES"]:
+					if checkRecipe(newRecipe, inventoryLocal, outputCreated,
+								   newDependentIndices, recipeList, itemNames):
+						#Stop looking for recipes to make the item
+						break
+				#The item cannot be produced with the current inventory
+				else:
+					return False
+				#The item was able to be made
+				continue
+			#The item cannot be produced due to the current history
+			return False
+		#The item cannot ever be created
+		except ValueError:
 			return False
 	#All items in the recipe are able to be made
 	return True
@@ -101,15 +111,15 @@ def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList,
 	#Iterate through all output items that haven't been created
 	for outputItem in recipeList:
 		if(not outputCreated[outputItem-1]):
+			#List of items to not try to make
+			dependentIndices = [outputItem-1]
 			#Check if any recipe to make the item can be fulfilled
 			for recipe in recipeList[outputItem]["RECIPES"]:
-			#This is done to avoid infinite recursion
-			#TODO: Check if there's a more efficient algorithm
-				tempOutputCreated = copy.copy(outputCreated)
-				tempOutputCreated[outputItem-1] = True
-				if checkRecipe(recipe, inventoryLocal, tempOutputCreated,
-							   recipeList, itemNames):
+				if checkRecipe(recipe, inventoryLocal, outputCreated,
+							   dependentIndices, recipeList, itemNames):
+					#Stop looking for recipes to make the item
 					break
+			#The item cannot be produced
 			else:
 				return False
 	#All remaining outputs can still be fulfilled
