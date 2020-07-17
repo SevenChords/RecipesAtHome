@@ -4,10 +4,19 @@
 # It is recommended to set at least           #
 # one of them to True                         #
 ###############################################
-# Randomise moves for step 1-20:              #
-# [randomise = False](default: False)         #
-# An Interesting way to pick legal moves:     #
+# An RNG approach that picks legal moves.     #
+# Biased towards picking moves near the start #
+# of the list that are typically faster:      #
+#                                             #
 # [select = True](default: True)              #
+#                                             #
+###############################################
+# Randomise completely shuffles legal moves   #
+# for first 50 moves. Randomise is ignored if #
+# Select is set to 'True'                     #
+#                                             #
+# [randomise = False](default: False)         #
+#                                             #
 ###############################################
 
 ###############################################
