@@ -92,12 +92,12 @@ def handleChapter5EarlySortEndItems(legal_moves, step_index, inventory, tempOutp
 					insertIndex = getInsertionIndex(legal_moves, step_index, temp_frame_sum)
 
 					#Describe how the break should play out
-					desc = "Ch.5 Break: DB in slot {1}, CO in slot {2}, Sort ({0}), KM in slot {3}, CS in slot {4}, Use TR in slot{5}".format(sort_name,
-																																			  DB_place_index+1,
-																																		      CO_place_index+1,
-																																		      KM_place_index+1,
-																																		      CS_place_index+1,
-																																			  TR_use_index+1)
+					desc = "Ch.5 Break: DB in slot {1}, CO in slot {2}, Sort ({0}), KM in slot {3}, CS in slot {4}, Use TR in slot {5}".format(sort_name,
+																																			   DB_place_index+1,
+																																		       CO_place_index+1,
+																																		       KM_place_index+1,
+																																		       CS_place_index+1,
+																																			   TR_use_index+1)
 					#Append the Legal Move
 					legal_moves[step_index].insert(insertIndex,[desc,58,temp_frame_sum,copy.copy(inventory)])
 
@@ -143,12 +143,12 @@ def handleChapter5LateSortEndItems(legal_moves, step_index, inventory, tempOutpu
 				insertIndex = getInsertionIndex(legal_moves, step_index, temp_frame_sum)
 
 				#Describe how the break should play out
-				desc = "Ch.5 Break: DB in slot {1}, CO in slot {2}, KM in slot {3}, Sort ({0}), CS in slot {4}, Use TR in slot{5}".format(sort_name,
-																																		  DB_place_index+1,
-																																		  CO_place_index+1,
-																																		  KM_place_index+1,
-																																		  CS_place_index+1,
-																																		  TR_use_index)
+				desc = "Ch.5 Break: DB in slot {1}, CO in slot {2}, KM in slot {3}, Sort ({0}), CS in slot {4}, Use TR in slot {5}".format(sort_name,
+																																		   DB_place_index+1,
+																																		   CO_place_index+1,
+																																		   KM_place_index+1,
+																																		   CS_place_index+1,
+																																		   TR_use_index)
 				#Append the Legal Move
 				legal_moves[step_index].insert(insertIndex,[desc,58,temp_frame_sum,copy.copy(inventory)])
 
@@ -443,6 +443,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 	#If the player does not toss the final output item, 5 extra frames are needed to obtain jump storage
 	JUMP_STORAGE_NO_TOSS_FRAMES = 5
 
+	sorted_alpha_list = getAlphaSort()
+	sorted_type_list = getTypeSort()
+
 	#start main loop
 	while(True):
 		stepIndex = 0
@@ -453,21 +456,20 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 		totalFrames = [0]
 		inventory = [startingInventory]
 		outputCreated = [[False]*58]
-		legalMoves = []
+		legalMoves = []		
 
-		sorted_alpha_list = getAlphaSort()
-		sorted_type_list = getTypeSort()
+		log(3, "Calculator", "Info", "Call " + str(callNumber),"Searching New Branch")
 
-		#step_RECORD = -1
+		#Only increment the counter if we're doing random searches
+		if(random or select):
+			incrementor = 1
+		else:
+			incrementor = 0
 
-		while(iterationCount < 100000000):
-	
-			iterationCount += 1
-
-			#if(stepIndex > step_RECORD):
-			#	step_RECORD = stepIndex
-			#	print(step_RECORD)
-			#	printResults("results/DebugRoadmap.txt",writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
+		#If the iteration count exceeds a given threshold,
+		#Then reset the entire search space and begin anew
+		while(iterationCount < 500000):
+			iterationCount += incrementor
 
 			#Check for bad states to immediately retreat from
 			#The Thunder Rage must remain in the inventory until the Ch.5 Intermission
@@ -799,7 +801,7 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							total_sorts += 1
 
 					#Limit the number of sorts allowed in a roadmap
-					if(total_sorts <= 15):
+					if(total_sorts <= 8):
 						
 						#Alphabetical Sort
 						alpha_inventory = getSortedInventory(inventory[stepIndex], sorted_alpha_list, False)
@@ -864,14 +866,18 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 				if(stepIndex == 0):
 					legalMoves[stepIndex] = list(filter(lambda x: not " and " in x[0], legalMoves[stepIndex]))
 
-				#Just because, if the step index is sufficiently small, just shuffle!
-				if(randomise and stepIndex < 20):
-					random.shuffle(legalMoves[stepIndex])
+				#Somewhat Random process of picking the quicker moves to recurse down
+				#Arbitrarilty remove the first listed move with a given probability
+				if(select and stepIndex < 50) :
+					total_moves = len(legalMoves[stepIndex])
+					while(total_moves > 1 and random.random() < (total_moves-2.0)/total_moves):
+						total_moves = len(legalMoves[stepIndex])
+						legalMoves[stepIndex].pop(0)
 
-				#Interesting methodology to pick out decent legal moves
-				if(select and stepIndex < 30) :
-					while(len(legalMoves[stepIndex]) > 1 and random.random() < 0.15):
-						legalMoves[stepIndex].pop(-1)
+				#When not doing the "Select" methodology, and opting for Randomize
+				#Just shuffle the entire list of legal moves and pick the new first item
+				elif(randomise and stepIndex < 50):
+					random.shuffle(legalMoves[stepIndex])
 
 				if(len(legalMoves[stepIndex]) == 0):
 					#There are no legal moves to iterate on, go back up...
