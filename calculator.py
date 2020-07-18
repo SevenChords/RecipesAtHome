@@ -460,16 +460,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 
 		log(3, "Calculator", "Info", "Call " + str(callNumber),"Searching New Branch")
 
-		#Only increment the counter if we're doing random searches
-		if(random or select):
-			incrementor = 1
-		else:
-			incrementor = 0
-
 		#If the iteration count exceeds a given threshold,
 		#Then reset the entire search space and begin anew
 		while(iterationCount < 500000):
-			iterationCount += incrementor
 
 			#Check for bad states to immediately retreat from
 			#The Thunder Rage must remain in the inventory until the Ch.5 Intermission
@@ -801,7 +794,7 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							total_sorts += 1
 
 					#Limit the number of sorts allowed in a roadmap
-					if(total_sorts <= 8):
+					if(total_sorts <= 15):
 						
 						#Alphabetical Sort
 						alpha_inventory = getSortedInventory(inventory[stepIndex], sorted_alpha_list, False)
@@ -940,6 +933,7 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 
 					stepIndex += 1
 					#logging for progress display
+					iterationCount += 1
 					if(iterationCount % 500000 == 0):
 						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
 					elif(iterationCount % 100000 == 0):
