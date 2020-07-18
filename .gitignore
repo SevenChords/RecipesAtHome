@@ -12,3 +12,5 @@ inventory.pyc
 moves.pyc
 logger.pyc
 recipes.pyc
+__pycache__/Dropbox.cpython-37.pyc
+.vscode/launch.json

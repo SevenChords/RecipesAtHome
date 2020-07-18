@@ -4,6 +4,7 @@ from inventory import getStartingInventory, getInventoryFrames
 from recipes import getRecipeList
 from config import getConfig
 from logger import log
+from Dropbox import getFastestRecordOnDropBox, test_record
 
 def worker(workQueue, doneQueue):
 	while(True):
@@ -38,17 +39,18 @@ def work(currentFrameRecord, startingInventory, recipeList, invFrames):
 	return result
 
 if __name__ == '__main__':
-	currentFrameRecord = 9999
 	cycle_count = 1
 	startingInventory = getStartingInventory()
 	recipeList = getRecipeList()
 	invFrames = getInventoryFrames()
 	workerCount = int(getConfig("workerCount"))
 	while(True):
+		currentFrameRecord = getFastestRecordOnDropBox()
 		#start the work
 		result = work(currentFrameRecord, startingInventory, recipeList, invFrames)
 		#sanity check
 		if(result[0] < currentFrameRecord):
+			test_record(result[0])
 			currentFrameRecord = result[0]
 			log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
 		cycle_count += 1
