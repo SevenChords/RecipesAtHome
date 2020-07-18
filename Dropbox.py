@@ -7,7 +7,7 @@ from dropbox.files import WriteMode
 from dropbox.exceptions import ApiError, AuthError
 
 # Access token
-TOKEN = 'RFWQOkXXGFAAAAAAAAAADnW-qFTyj7DsDYko2FT-vqFkxRRCusFVvVA95PKXOb-C'
+TOKEN = 'RFWQOkXXGFAAAAAAAAAAD3gmIlx-znwu0s56cEZn8QjrTsyibVHHWkmIxXBjA-9I'
 
 # Uploads contents of LOCALFILE to Dropbox
 def backup(LOCALFILE, dbx):
