@@ -1,50 +1,42 @@
 import multiprocessing
+from ctypes import c_int
 from calculator import calculateOrder
 from inventory import getStartingInventory, getInventoryFrames
 from recipes import getRecipeList
 from config import getConfig
 from logger import log
 
-def worker(workQueue, doneQueue):
-	while(True):
-		job = workQueue.get(True)
-		#waiting for a job to appear
-		#in this case job refers to a single instance of calculating the recipe order
-		for result in calculateOrder(job[0], job[1], job[2], job[3], job[4]):
-			#write the calculated result to the "done" queue
-			doneQueue.put(result, False)
+def worker(doneQueue, *args):
+	for result in calculateOrder(*args):
+		#write the calculated result to the "done" queue
+		doneQueue.put(result, False)
 
-def work(currentFrameRecord, startingInventory, recipeList, invFrames):
-	#create queues
+def work(frameRecord, startingInventory, recipeList, invFrames):
+	#create queue for results to be pushed to
 	doneQueue = multiprocessing.Queue(workerCount)
-	workQueue = multiprocessing.Queue(workerCount)
-	#create array for all the instances that are running
-	instances = []
-	#start instances
+	#start workers
 	for i in range(workerCount):
-		instance = multiprocessing.Process(target=worker, args=(workQueue, doneQueue))
+		instance = multiprocessing.Process(
+			target=worker, args=(doneQueue, i, frameRecord, startingInventory,
+								 recipeList, invFrames))
 		instance.daemon = True
 		instance.start()
-		instances.append(instance)
-	#start jobs
-	for i in range (workerCount):
-		job = [i, currentFrameRecord, startingInventory, recipeList, invFrames]
-		workQueue.put(job, False)
-	#wait for each result from the threads
+	#wait for each result from the workers
 	while True:
 		yield doneQueue.get(True)
 
 if __name__ == '__main__':
-	currentFrameRecord = 9999
+	frameRecord = multiprocessing.Value(c_int)
+	frameRecord.value = 9999
 	cycle_count = 1
 	startingInventory = getStartingInventory()
 	recipeList = getRecipeList()
 	invFrames = getInventoryFrames()
 	workerCount = int(getConfig("workerCount"))
 	#start the work
-	for result in work(currentFrameRecord, startingInventory, recipeList, invFrames):
-		#sanity check
-		if(result[0] < currentFrameRecord):
-			currentFrameRecord = result[0]
-			log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
+	for result in work(frameRecord, startingInventory, recipeList,
+					   invFrames):
+		log(1, "Main", "Results", "",
+			'cycle {0} done, current record: {1} frames. Record on call {2}.'
+			.format(cycle_count, frameRecord.value, result[1]))
 		cycle_count += 1

@@ -1,5 +1,7 @@
 import copy
 import random
+from operator import itemgetter
+from math import inf
 from logger import log
 from inventory import getAlphaSort, getTypeSort, remainingOutputsCanBeFulfilled
 from moves import getInsertionIndex
@@ -27,25 +29,15 @@ def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, out
 		log(5, "Calculator", "File", "Write", "Data for Step " + str(writtenStep[i]) + " written.")
 	file.close()
 
-#Return the sorted version of the inventory, as dictated by the full sorted dictionary
-#Also which direction to sort the inventory
-def getSortedInventory(inventory, full_sorted_list, is_reversed):
-	sorted_inventory = []
-
-	if(is_reversed):
-		for i in range(len(full_sorted_list)-1,-1,-1):
-			for j in range(0,inventory.count(full_sorted_list[i])):
-				sorted_inventory.append(full_sorted_list[i])
-	else:
-		for i in range(0,len(full_sorted_list)):
-			for j in range(0,inventory.count(full_sorted_list[i])):
-				sorted_inventory.append(full_sorted_list[i])
-
-	#Remaining Spaces are "Blocked"
-	while(len(sorted_inventory) < 20):
-		sorted_inventory.append("BLOCKED")
-
-	return sorted_inventory
+#Sort the inventory according to the ordering parameters given,
+#transforming any blank spaces to unusable spaces at the end
+def getSortedInventory(inventory, sort_positions, reversed):
+	return list(map(itemgetter(1),
+					sorted([(sort_positions[item], item)
+							if item != "NULL" and item != "BLOCKED"
+							else (-inf if reversed else inf, "BLOCKED")
+							for item in inventory],
+							key=itemgetter(0), reverse=reversed)))
 
 def handleChapter5EarlySortEndItems(legal_moves, step_index, inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, SORT_FRAMES, sort_name, temp_frames_DB, temp_frames_CO, DB_place_index, CO_place_index):
 	TOSS_FRAMES = 23
@@ -158,7 +150,10 @@ def handleChapter5LateSortEndItems(legal_moves, step_index, inventory, tempOutpu
 
 #Evaluates all possible placements of the Keel Mango and Courage Shell
 #And all possible locations and types of sorting that can place the Coconut into a position where it can be duplicated
-def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, full_alpha_list, full_type_list):
+def handleChapter5Eval(legal_moves, step_index, temp_inventory,
+					   tempOutputsFulfilled, recipeList, itemNames, invFrames,
+					   temp_frames_DB, temp_frames_CO, alpha_sort_positions,
+					   type_sort_positions):
 	#Various Frame Counts
 	TOSS_FRAMES = 23
 	ALPHA_SORT_FRAMES = 38
@@ -175,7 +170,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 	#======================================
 
 	#Alphabetically Sorted Inventory
-	alpha_inventory = getSortedInventory(temp_inventory, full_alpha_list, False)
+	alpha_inventory = getSortedInventory(
+		temp_inventory, alpha_sort_positions, reversed=False)
 
 	#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
 	#Because the coconut is needed for duplication
@@ -196,7 +192,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 										CO_place_index)
 
 	#Reverse Alphabetical Sorted Inventory
-	reverse_alpha_inventory = getSortedInventory(temp_inventory, full_alpha_list, True)
+	reverse_alpha_inventory = getSortedInventory(
+		temp_inventory, alpha_sort_positions, reversed=True)
 
 	#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
 	#Because the coconut is needed for duplication
@@ -217,7 +214,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 										CO_place_index)
 
 	#Type Sorted Inventory
-	type_inventory = getSortedInventory(temp_inventory, full_type_list, False)
+	type_inventory = getSortedInventory(
+		temp_inventory, type_sort_positions, reversed=False)
 
 	#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
 	#Because the coconut is needed for duplication
@@ -238,7 +236,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 										CO_place_index)
 
 	#Reverse Type Sorted Inventory
-	reverse_type_inventory = getSortedInventory(temp_inventory, full_type_list, True)
+	reverse_type_inventory = getSortedInventory(
+		temp_inventory, type_sort_positions, reversed=True)
 
 	#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
 	#Because the coconut is needed for duplication
@@ -286,7 +285,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 
 		#Perform all sorts
 		#Alphabetically Sorted Inventory
-		alpha_inventory = getSortedInventory(temp_inventory, full_alpha_list, False)
+		alpha_inventory = getSortedInventory(
+			temp_inventory, alpha_sort_positions, reversed=False)
 
 		#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
 		#Because the coconut is needed for duplication
@@ -309,7 +309,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 										   KM_place_index)
 
 		#Reverse Alphabetical Sorted Inventory
-		reverse_alpha_inventory = getSortedInventory(temp_inventory, full_alpha_list, True)
+		reverse_alpha_inventory = getSortedInventory(
+			temp_inventory, alpha_sort_positions, reversed=True)
 
 		#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
 		#Because the coconut is needed for duplication
@@ -332,7 +333,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 										   KM_place_index)
 
 		#Type Sorted Inventory
-		type_inventory = getSortedInventory(temp_inventory, full_type_list, False)
+		type_inventory = getSortedInventory(
+			temp_inventory, type_sort_positions, reversed=False)
 
 		#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
 		#Because the coconut is needed for duplication
@@ -355,7 +357,8 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 										   KM_place_index)
 
 		#Reverse Type Sorted Inventory
-		reverse_type_inventory = getSortedInventory(temp_inventory, full_type_list, True)
+		reverse_type_inventory = getSortedInventory(
+			temp_inventory, type_sort_positions, reversed=True)
 
 		#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
 		#Because the coconut is needed for duplication
@@ -380,7 +383,7 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 		#Return the replaced items for the next loop
 		temp_inventory[KM_place_index] = KM_replacement
 
-def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList, invFrames):
+def calculateOrder(callNumber, frameRecord, startingInventory, recipeList, invFrames):
 	itemNames = []
 	#Fill the itemNames
 	for item in recipeList:
@@ -389,6 +392,12 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 	log(5, "Calculator", "Items", "Scan", "All item names scanned successfully.")
 	randomise = bool(getConfig("randomise") == "True")
 	select = bool(getConfig("select") == "True")
+
+	alpha_sort_positions = {itemName: index for index, itemName
+							in enumerate(getAlphaSort())}
+	type_sort_positions = {itemName: index for index, itemName
+						   in enumerate(getTypeSort())}
+
 	#===============================================================================
 	# GOAL
 	#===============================================================================
@@ -443,9 +452,6 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 	#If the player does not toss the final output item, 5 extra frames are needed to obtain jump storage
 	JUMP_STORAGE_NO_TOSS_FRAMES = 5
 
-	sorted_alpha_list = getAlphaSort()
-	sorted_type_list = getTypeSort()
-
 	#start main loop
 	while(True):
 		stepIndex = 0
@@ -490,10 +496,11 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					totalFrames[-1] += JUMP_STORAGE_NO_TOSS_FRAMES
 				else:
 					writtenStep[-1] += " (Jump Storage on Tossed Item)"
-		
-				if(totalFrames[stepIndex] < currentFrameRecord):
+
+				#Technically a race condition.
+				if(totalFrames[stepIndex] < frameRecord.value):
 					#New Record!
-					currentFrameRecord = totalFrames[stepIndex]
+					frameRecord.value = totalFrames[stepIndex]
 					#print("New Record Time: {0}".format(totalFrames[stepIndex]))
 					#Log the updated outcome
 					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
@@ -718,7 +725,11 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 						temp_frames_CO = 0
 						
 						#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-						handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
+						handleChapter5Eval(
+							legalMoves, stepIndex, tempInventory,
+							tempOutputsFulfilled, recipeList, itemNames,
+							invFrames, temp_frames_DB, temp_frames_CO,
+							alpha_sort_positions, type_sort_positions)
 
 					elif(tempInventory.count("NULL") == 1):
 						#The Dried Bouquet gets Auto Placed in the 1st available NULL
@@ -741,7 +752,11 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 								temp_frames_CO = TOSS_FRAMES + invFrames[viableItems][tempindexCO]
 
 								#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-								handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
+								handleChapter5Eval(
+									legalMoves, stepIndex, tempInventory,
+									tempOutputsFulfilled, recipeList, itemNames,
+									invFrames, temp_frames_DB, temp_frames_CO,
+									alpha_sort_positions, type_sort_positions)
 
 								#Reset what was previously in the Coconut's slot
 								tempInventory[tempindexCO] = tossed_item_1
@@ -773,7 +788,13 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 										temp_frames_CO = TOSS_FRAMES + invFrames[viableItems][tempindexCO]
 
 										#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-										handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
+										handleChapter5Eval(
+											legalMoves, stepIndex, 
+											tempInventory, tempOutputsFulfilled,
+											recipeList, itemNames, invFrames,
+											temp_frames_DB, temp_frames_CO,
+											alpha_sort_positions,
+											type_sort_positions)
 
 										#Reset what was preciously in the Coconut's Slot
 										tempInventory[tempindexCO] = tossed_item_2
@@ -797,7 +818,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					if(total_sorts <= 15):
 						
 						#Alphabetical Sort
-						alpha_inventory = getSortedInventory(inventory[stepIndex], sorted_alpha_list, False)
+						alpha_inventory = getSortedInventory(
+							inventory[stepIndex], alpha_sort_positions,
+							reversed=False)
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(alpha_inventory != inventory[stepIndex]):
@@ -810,7 +833,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							legalMoves[stepIndex].append([description,-1,ALPHA_SORT_FRAMES,alpha_inventory])
 
 						#Reverse Alphabetical Sort
-						reverse_alpha_inventory = getSortedInventory(inventory[stepIndex], sorted_alpha_list, True)
+						reverse_alpha_inventory = getSortedInventory(
+							inventory[stepIndex], alpha_sort_positions,
+							reversed=True)
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(reverse_alpha_inventory != inventory[stepIndex]):
@@ -823,7 +848,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							legalMoves[stepIndex].append([description,-1,REVERSE_ALPHA_SORT_FRAMES,reverse_alpha_inventory])
 
 						#Type Sort
-						type_inventory = getSortedInventory(inventory[stepIndex], sorted_type_list, False)
+						type_inventory = getSortedInventory(
+							inventory[stepIndex], type_sort_positions,
+							reversed=False)
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(type_inventory != inventory[stepIndex]):
@@ -836,7 +863,9 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 							legalMoves[stepIndex].append([description,-1,TYPE_SORT_FRAMES,type_inventory])
 
 						#Reverse Type Sort
-						reverse_type_inventory = getSortedInventory(inventory[stepIndex], sorted_type_list, True)
+						reverse_type_inventory = getSortedInventory(
+							inventory[stepIndex], type_sort_positions,
+							reversed=True)
 
 						#Only add the legal move if the sort actually changes the inventory
 						if(reverse_type_inventory != inventory[stepIndex]):
@@ -853,7 +882,10 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 				#=====================================
 
 				#Filter out all legal moves that would exceed the current frame limit
-				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < currentFrameRecord, legalMoves[stepIndex]))
+				stepFramesCutoff = frameRecord.value - totalFrames[stepIndex]
+				legalMoves[stepIndex] = list(filter(lambda x: x[2]
+													< stepFramesCutoff,
+													legalMoves[stepIndex]))
 			
 				#Filter out all legal moves that use 2 ingredients in the very first legal move
 				if(stepIndex == 0):
@@ -901,7 +933,10 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 				legalMoves[stepIndex].pop(0)
 
 				#Filter out all legal moves that would exceed the current frame limit
-				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < currentFrameRecord, legalMoves[stepIndex]))
+				stepFramesCutoff = frameRecord.value - totalFrames[stepIndex]
+				legalMoves[stepIndex] = list(filter(lambda x: x[2]
+													< stepFramesCutoff,
+													legalMoves[stepIndex]))
 
 				#Just because, if the step index is sufficiently small, just shuffle!
 				if(randomise):
