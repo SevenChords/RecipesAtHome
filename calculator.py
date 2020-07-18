@@ -498,7 +498,7 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 					#Log the updated outcome
 					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
 
-					return [totalFrames[stepIndex], callNumber]
+					yield [totalFrames[stepIndex], callNumber]
 						
 				#Regardless of record status, its time to go back up and find new endstates
 				#Wipe away the current state

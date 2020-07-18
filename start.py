@@ -10,9 +10,9 @@ def worker(workQueue, doneQueue):
 		job = workQueue.get(True)
 		#waiting for a job to appear
 		#in this case job refers to a single instance of calculating the recipe order
-		result = calculateOrder(job[0], job[1], job[2], job[3], job[4])
-		#write the calculated result to the "done" queue
-		doneQueue.put(result, False)
+		for result in calculateOrder(job[0], job[1], job[2], job[3], job[4]):
+			#write the calculated result to the "done" queue
+			doneQueue.put(result, False)
 
 def work(currentFrameRecord, startingInventory, recipeList, invFrames):
 	#create queues
@@ -30,12 +30,9 @@ def work(currentFrameRecord, startingInventory, recipeList, invFrames):
 	for i in range (workerCount):
 		job = [i, currentFrameRecord, startingInventory, recipeList, invFrames]
 		workQueue.put(job, False)
-	#waiting for first result
-	result = doneQueue.get(True)
-	#terminate the other instances still running
-	for instance in instances:
-		instance.terminate()
-	return result
+	#wait for each result from the threads
+	while True:
+		yield doneQueue.get(True)
 
 if __name__ == '__main__':
 	currentFrameRecord = 9999
@@ -44,9 +41,8 @@ if __name__ == '__main__':
 	recipeList = getRecipeList()
 	invFrames = getInventoryFrames()
 	workerCount = int(getConfig("workerCount"))
-	while(True):
-		#start the work
-		result = work(currentFrameRecord, startingInventory, recipeList, invFrames)
+	#start the work
+	for result in work(currentFrameRecord, startingInventory, recipeList, invFrames):
 		#sanity check
 		if(result[0] < currentFrameRecord):
 			currentFrameRecord = result[0]
