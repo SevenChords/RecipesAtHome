@@ -67,88 +67,63 @@ def getInventoryFrames():
 	log(5, "Inventory", "Frames", "Generate", str(invFrames))
 	return invFrames
 
-def checkIngredients(recipe, inventoryLocal, outputCreated, recipeList, itemNames, level=0):
-	#With the given inventory and knolwedge of which outputs have already been created,
-	#Determine if the given recipe can be fulfilled
-	for item in recipe:
-		if item in inventoryLocal:
-			#This item is in the current inventory, do nothing for now
-			pass
-		elif item in itemNames and(not outputCreated[itemNames.index(item)]):
-			#This item is not in the current inventory, but it is another output item that hasn't been made yet
-			#Check all recipes of the output item to see if it can be made with the current inventory.
-			if(level < 3):
-				#Don't evaluate any further than the 3rd recursion level
-				#Done to avoid infinite recipe loops (Inky Sauce > Shroom Broth > Poison Shroom > Inky Sauce > ...)
-				tempGoodRecipe = False
-				for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
-					#Check to see if this ingredient can be made with other ingredients the player has
-					if(checkIngredients(newRecipe, inventoryLocal, outputCreated, recipeList, itemNames, level + 1)):
-						#At least one recipe can be fulfilled now.
-						tempGoodRecipe = True
-					#log(7, "Inventory", "Recipe", "Check", "Recipe " + str(newRecipe) + " has been evaluated.")
-				#After evaluating all recipes of the item, if that item cannot be produced, return false
-				if(not tempGoodRecipe):
-					#log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
+def checkRecipe(recipe, makeableItems, outputCreated, dependentIndices,
+				recipeList, itemNames):
+	#Determine if the recipe items can still be fulfilled
+	for itemName in recipe:
+		#Check if we already have the item or know we can make it
+		if itemName in makeableItems:
+			continue
+		try:
+			#Throws if item cannot ever be made
+			itemIndex = itemNames.index(itemName)
+			#Check if it hasn't been made and doesn't depend on any item
+			#it is needed to make
+			if not (outputCreated[itemIndex] or itemIndex in dependentIndices):
+				#Anything made for this item cannot depend on it
+				newDependentIndices = dependentIndices + [itemIndex]
+				#Recurse on all recipes that can make this item
+				for newRecipe in recipeList[itemIndex+1]["RECIPES"]:
+					if checkRecipe(newRecipe, makeableItems, outputCreated,
+								   newDependentIndices, recipeList, itemNames):
+						#Stop looking for recipes to make the item
+						makeableItems.add(itemName)
+						break
+				#The item cannot be produced with the current inventory
+				else:
 					return False
-			else:
-				return False
-		else:
-			#The item isn't in the inventory, and can't be made through another recipe, return False
+				#The item was able to be made
+				continue
+			#The item cannot be produced due to the current history
 			return False
-	#By getting here, we know all ingredients are at least possible to create still with the current inventory
-	#log(5, "inventory", "Recipe", "Check", "It is still possible to make all the ingredients with the current inventory")
+		#The item cannot ever be created
+		except ValueError:
+			return False
+	#All items in the recipe are able to be made
 	return True
 
-def checkIngredients(recipe, inventoryLocal, outputCreated, recipeList, itemNames):
- 	#With the given inventory, determine if the remaining output items be fulfilled
- 	for item in recipe:
- 		if item in inventoryLocal:
- 			#This item is in the current inventory, do nothing for now
- 			pass
- 		elif item in itemNames and(not outputCreated[itemNames.index(item)]):
- 			for newRecipe in recipeList[itemNames.index(item)+1]["RECIPES"]:
- 				#Recurse on all recipes that can make this item
- 				tempOutputCreated = copy.copy(outputCreated)
- 				tempOutputCreated[itemNames.index(item)] = True
- 				#log(7, "Inventory", "Recipe", "Check", str(newRecipe) + " has been evaluated.")
-				if checkIngredients(newRecipe, inventoryLocal, tempOutputCreated, recipeList, itemNames):
-					break
- 			#After evaluating all recipes of the item, if that item cannot be produced, return false
- 			else:
- 				#log(7, "Inventory", "Recipe", "Check", str(item) + " can't be produced with current inventory.")
- 				return False
- 		else:
- 			#The item isn't in the inventory, and can't be made through another recipe, return False
- 			return False
- 	#By getting here, we know all items are at least possible to create still with the current inventory
- 	#log(7, "inventory", "Recipe", "Check", "It is still possible to make all the items with the current inventory")
- 	return True
-
-def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList, itemNames):
+def remainingOutputsCanBeFulfilled(inventoryLocal, outputCreated, recipeList,
+								   itemNames):
 	#With the given inventory, can the remaining recipes be fulfilled?
-
-	#If Chapter 5 has not been done, add the items it gives us into consideration
-	if(not outputCreated[57]):
-		inventoryLocal = inventoryLocal + ["Dried Bouquet", "Coconut", "Keel Mango", "Courage Shell"]
-
-	#Iterate through all remaining output items
+	makeableItems = set(inventoryLocal)
+	#If Chapter 5 has not been done, add the items it gives us
+	if not outputCreated[57]:
+		makeableItems.update(["Keel Mango", "Coconut", "Dried Bouquet",
+							  "Courage Shell"])
+	#Iterate through all output items that haven't been created
 	for outputItem in recipeList:
-		#Only want output items that haven't already been created elsewhere
 		if(not outputCreated[outputItem-1]):
-			#Iterate through all recipes
+			#List of items to not try to make
+			dependentIndices = [outputItem-1]
+			#Check if any recipe to make the item can be fulfilled
 			for recipe in recipeList[outputItem]["RECIPES"]:
-				#This is done to avoid infinite recursion
-				#TODO: Check if there's a more efficient algorithm
-				tempOutputCreated = copy.copy(outputCreated)
-				tempOutputCreated[outputItem-1] = True
-				if checkIngredients(recipe, inventoryLocal, tempOutputCreated, recipeList, itemNames):
+				if checkRecipe(recipe, makeableItems, outputCreated,
+							   dependentIndices, recipeList, itemNames):
+					#Stop looking for recipes to make the item
+					makeableItems.add(itemNames[outputItem-1])
 					break
+			#The item cannot be produced
 			else:
 				return False
-
-		#log(7, "Inventory", "Recipe", "Check", str(recipeList[outputItem]["NAME"]) + " has been evaluated.")
-	#haven't returned False in evaluating all output items
-	#Meaning that all remeining outputs can still be fulfilled!
-	#log(7, "Inventory", "Recipe", "Check", "All remaining output items can be fulfilled")
+	#All remaining outputs can still be fulfilled
 	return True
