@@ -39,6 +39,7 @@ def work(startingInventory, recipeList, invFrames):
 	return result
 
 if __name__ == '__main__':
+	multiprocessing.freeze_support()
 	cycle_count = 1
 	startingInventory = getStartingInventory()
 	recipeList = getRecipeList()
