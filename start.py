@@ -45,7 +45,7 @@ if __name__ == '__main__':
 	invFrames = getInventoryFrames()
 	workerCount = int(getConfig("workerCount"))
 	while(True):
-    	checkForUpdates()
+		checkForUpdates()
 		currentFrameRecord = getFastestRecordOnFTP()
 		#start the work
 		result = work(startingInventory, recipeList, invFrames)
