@@ -64,7 +64,7 @@ def checkForUpdates():
 		localVersion = getConfig("Version")
 		if(remoteVersion == localVersion):
 			log(0, "Update", "Check", "", "You are running the newest release of this script.\nHappy calculation time!")
-			return null
+			return True
 		else:
 			log(0, "Update", "Check", "", "You are running the wrong version of this script, please get the newest release from github.")
 			inpu()
