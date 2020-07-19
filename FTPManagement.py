@@ -1,6 +1,7 @@
 import re
 from ftplib import FTP
 from logger import log
+from config import getConfig
 
 ftp = FTP("ftp.byethost7.com")
 ftp.login("b7_26300774", "Wxu8dLdV2/")
@@ -44,7 +45,7 @@ def testRecord(value):
     ftp.cwd("htdocs/roadmap/results")
     if(localRecord <= remoteRecord):
         with open("results/[" + str(localRecord) + "].txt", "rb") as localFile:
-            ftp.storlines("STOR %s" % "[" + str(localRecord) + "].txt", localFile)
+            ftp.storlines("STOR %s" % "[" + str(localRecord) + "]_" + getConfig("Username") + ".txt", localFile)
         localFile.close()
         log(1, "FTP", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
     ftp.quit()
