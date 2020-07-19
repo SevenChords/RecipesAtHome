@@ -4,7 +4,7 @@ from inventory import getStartingInventory, getInventoryFrames
 from recipes import getRecipeList
 from config import getConfig
 from logger import log
-from FTPManagement import getFastestRecordOnFTP, testRecord
+from FTPManagement import getFastestRecordOnFTP, testRecord, checkForUpdates
 
 def worker(workQueue, doneQueue):
 	while(True):
@@ -45,6 +45,7 @@ if __name__ == '__main__':
 	invFrames = getInventoryFrames()
 	workerCount = int(getConfig("workerCount"))
 	while(True):
+    	checkForUpdates()
 		currentFrameRecord = getFastestRecordOnFTP()
 		#start the work
 		result = work(startingInventory, recipeList, invFrames)

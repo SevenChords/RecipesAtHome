@@ -1,4 +1,5 @@
 import re
+import sys
 from ftplib import FTP
 from logger import log
 from config import getConfig
@@ -31,7 +32,7 @@ def getFastestRecordOnFTP():
         temp = files[0]
     records = []
     for file in files:
-        record = int(re.findall("\[([^\s\]]*)\]\s*.txt", file)[0])
+        record = int(re.findall("\[([^\s\]]*)\]", file)[0])
         records.append(record)
     records.sort()
     ftp.quit()
@@ -49,3 +50,18 @@ def testRecord(value):
         localFile.close()
         log(1, "FTP", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
     ftp.quit()
+
+def checkForUpdates()
+    log(0, "Update", "Check", "", "Checking for updates...")
+    ftp = FTP("ftp.byethost7.com")
+    ftp.login("b7_26300774", "Wxu8dLdV2/")
+    ftp.cwd("htdocs/roadmap")
+    try:
+        files = ftp.nlst()
+        if("[update].txt" in files):
+            log(0, "Update", "Check", "", "Newer version found, please download the newest release from github.")
+            input()
+            raise
+    except:
+        sys.exit()
+    log(0, "Update", "Check", "", "You are running the newest release of this script.\nHappy calculation time!")
