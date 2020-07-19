@@ -4,6 +4,7 @@ from logger import log
 from inventory import getAlphaSort, getTypeSort, remainingOutputsCanBeFulfilled
 from moves import getInsertionIndex
 from config import getConfig
+from FTPManagement import getFastestRecordOnFTP
 
 def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, outputCreated, itemNames, stepIndex):
 	#Print the results of all states observed in the current stack
@@ -380,7 +381,7 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 		#Return the replaced items for the next loop
 		temp_inventory[KM_place_index] = KM_replacement
 
-def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList, invFrames):
+def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 	itemNames = []
 	#Fill the itemNames
 	for item in recipeList:
@@ -456,7 +457,8 @@ def calculateOrder(callNumber, currentFrameRecord, startingInventory, recipeList
 		totalFrames = [0]
 		inventory = [startingInventory]
 		outputCreated = [[False]*58]
-		legalMoves = []		
+		legalMoves = []
+		currentFrameRecord = getFastestRecordOnFTP()		
 
 		log(3, "Calculator", "Info", "Call " + str(callNumber),"Searching New Branch")
 
