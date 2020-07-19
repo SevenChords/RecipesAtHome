@@ -51,7 +51,7 @@ def testRecord(value):
 		log(1, "FTP", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
 	ftp.quit()
 
-def checkForUpdates()
+def checkForUpdates():
 	log(0, "Update", "Check", "", "Checking for updates...")
 	ftp = FTP("ftp.byethost7.com")
 	ftp.login("b7_26300774", "Wxu8dLdV2/")
