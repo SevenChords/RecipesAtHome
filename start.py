@@ -1,4 +1,5 @@
 import multiprocessing
+from ctypes import c_int
 from calculator import calculateOrder
 from inventory import getStartingInventory, getInventoryFrames
 from recipes import getRecipeList
@@ -6,51 +7,39 @@ from config import getConfig
 from logger import log
 from FTPManagement import getFastestRecordOnFTP, testRecord
 
-def worker(workQueue, doneQueue):
-	while(True):
-		job = workQueue.get(True)
-		#waiting for a job to appear
-		#in this case job refers to a single instance of calculating the recipe order
-		result = calculateOrder(job[0], job[1], job[2], job[3], job[4])
+def worker(doneQueue, *args):
+	for result in calculateOrder(*args):
 		#write the calculated result to the "done" queue
 		doneQueue.put(result, False)
 
-def work(currentFrameRecord, startingInventory, recipeList, invFrames):
-	#create queues
+def work(frameRecord, startingInventory, recipeList, invFrames):
+	#create queue for results to be pushed to
 	doneQueue = multiprocessing.Queue(workerCount)
-	workQueue = multiprocessing.Queue(workerCount)
-	#create array for all the instances that are running
-	instances = []
-	#start instances
+	#start workers
 	for i in range(workerCount):
-		instance = multiprocessing.Process(target=worker, args=(workQueue, doneQueue))
+		instance = multiprocessing.Process(
+			target=worker, args=(doneQueue, i, frameRecord, startingInventory,
+								 recipeList, invFrames))
 		instance.daemon = True
 		instance.start()
-		instances.append(instance)
-	#start jobs
-	for i in range (workerCount):
-		job = [i, currentFrameRecord, startingInventory, recipeList, invFrames]
-		workQueue.put(job, False)
-	#waiting for first result
-	result = doneQueue.get(True)
-	#terminate the other instances still running
-	for instance in instances:
-		instance.terminate()
-	return result
+	#wait for each result from the workers
+	while True:
+		yield doneQueue.get(True)
 
 if __name__ == '__main__':
+	frameRecord = multiprocessing.Value(c_int)
+	frameRecord.value = getFastestRecordOnFTP()
 	cycle_count = 1
 	startingInventory = getStartingInventory()
 	recipeList = getRecipeList()
 	invFrames = getInventoryFrames()
 	workerCount = int(getConfig("workerCount"))
-	while(True):
-		currentFrameRecord = getFastestRecordOnFTP()
-		#start the work
-		result = work(currentFrameRecord, startingInventory, recipeList, invFrames)
-		#sanity check
-		if(result[0] < currentFrameRecord):
-			testRecord(result[0])
-			currentFrameRecord = result[0]
-			log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, currentFrameRecord, result[1]))
+	#start the work
+	for result in work(frameRecord, startingInventory, recipeList,
+					   invFrames):
+		testRecord(result[0])
+		log(1, "Main", "Results", "",
+			'cycle {0} done, current record: {1} frames. Record on call {2}.'
+			.format(cycle_count, result[0], result[1]))
+		frameRecord.value = getFastestRecordOnFTP()
 		cycle_count += 1
