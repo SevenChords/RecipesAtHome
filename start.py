@@ -5,6 +5,7 @@ from inventory import getStartingInventory, getInventoryFrames
 from recipes import getRecipeList
 from config import getConfig
 from logger import log
+from FTPManagement import getFastestRecordOnFTP, testRecord
 
 def worker(doneQueue, *args):
 	for result in calculateOrder(*args):
@@ -27,7 +28,7 @@ def work(frameRecord, startingInventory, recipeList, invFrames):
 
 if __name__ == '__main__':
 	frameRecord = multiprocessing.Value(c_int)
-	frameRecord.value = 9999
+	frameRecord.value = getFastestRecordOnFTP()
 	cycle_count = 1
 	startingInventory = getStartingInventory()
 	recipeList = getRecipeList()
@@ -36,7 +37,9 @@ if __name__ == '__main__':
 	#start the work
 	for result in work(frameRecord, startingInventory, recipeList,
 					   invFrames):
+		testRecord(result[0])
 		log(1, "Main", "Results", "",
 			'cycle {0} done, current record: {1} frames. Record on call {2}.'
-			.format(cycle_count, frameRecord.value, result[1]))
+			.format(cycle_count, result[0], result[1]))
+		frameRecord.value = getFastestRecordOnFTP()
 		cycle_count += 1

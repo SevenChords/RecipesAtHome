@@ -12,3 +12,11 @@ inventory.pyc
 moves.pyc
 logger.pyc
 recipes.pyc
+__pycache__/Dropbox.cpython-37.pyc
+.vscode/launch.json
+__pycache__/recipes.cpython-38.pyc
+__pycache__/moves.cpython-38.pyc
+__pycache__/logger.cpython-38.pyc
+__pycache__/inventory.cpython-38.pyc
+__pycache__/config.cpython-38.pyc
+__pycache__/calculator.cpython-38.pyc
