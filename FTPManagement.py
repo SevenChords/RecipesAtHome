@@ -31,7 +31,7 @@ def getFastestRecordOnFTP():
         temp = files[0]
     records = []
     for file in files:
-        record = int(re.findall("\[([^\s\]]*)\].txt", file)[0])
+        record = int(re.findall("\[([^\s\]]*)\]\s*.txt", file)[0])
         records.append(record)
     records.sort()
     ftp.quit()
