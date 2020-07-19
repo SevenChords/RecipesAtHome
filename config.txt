@@ -36,7 +36,7 @@
 # 6 - Logs workers every 1k iterations        #
 # 7 - Logs everything (debugging mode)        #
 ###############################################
-# [logLevel = 4] (default: 3)                 #
+# [logLevel = 3] (default: 3)                 #
 ###############################################
 
 ###############################################
@@ -56,5 +56,5 @@
 # your CPU (depending on how many you need    #
 # for your other activities)                  #
 ###############################################
-# [workerCount = 8] (default: 4)              #
+# [workerCount = 4] (default: 4)              #
 ###############################################
