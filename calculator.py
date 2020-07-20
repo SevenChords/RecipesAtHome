@@ -941,14 +941,14 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 						outputCreated[stepIndex + 1][legalMoves[stepIndex][0][1]-1] = True
 
 					stepIndex += 1
-					
+					currentRecipes = outputCreated[stepIndex].count(True)
 				
 					# Track some of our "best" values for more detailed logging.
-					if bestRecipesMade < outputCreated[stepIndex].count(True):
-						bestRecipesMade = max(outputCreated[stepIndex].count(True), bestRecipesMade)
+					if bestRecipesMade < currentRecipes:
+						bestRecipesMade = max(currentRecipes, bestRecipesMade)
 						bestStepIndex = stepIndex
 						bestTotalFrames = totalFrames[stepIndex]
-					elif bestRecipesMade == outputCreated[stepIndex].count(True):
+					elif bestRecipesMade == currentRecipes:
 						bestStepIndex = min(stepIndex, bestStepIndex)
 						bestTotalFrames = min(totalFrames[stepIndex], bestTotalFrames)
 
