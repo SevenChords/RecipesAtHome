@@ -452,6 +452,9 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 	#start main loop
 	while(True):
 		stepIndex = 0
+		bestStepIndex = 0
+		bestRecipesMade = 0
+		bestTotalFrames = 0
 		iterationCount = 0
 		#State Description for each "Step" taken
 		writtenStep = ["Begin"]
@@ -938,15 +941,26 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 						outputCreated[stepIndex + 1][legalMoves[stepIndex][0][1]-1] = True
 
 					stepIndex += 1
+					
+				
+					# Track some of our "best" values for more detailed logging.
+					if bestRecipesMade < outputCreated[stepIndex].count(True):
+						bestRecipesMade = max(outputCreated[stepIndex].count(True), bestRecipesMade)
+						bestStepIndex = stepIndex
+						bestTotalFrames = totalFrames[stepIndex]
+					elif bestRecipesMade == outputCreated[stepIndex].count(True):
+						bestStepIndex = min(stepIndex, bestStepIndex)
+						bestTotalFrames = min(totalFrames[stepIndex], bestTotalFrames)
+
 					#logging for progress display
 					iterationCount += 1
 					if(iterationCount % 500000 == 0):
-						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestTotalFrames, bestStepIndex, bestTotalFrames))
 					elif(iterationCount % 100000 == 0):
-						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestTotalFrames, bestStepIndex, bestTotalFrames))
 					elif(iterationCount % 1000 == 0):
-						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestTotalFrames, bestStepIndex, bestTotalFrames))
 
 		# We've hit max iteration count, but didn't find a result.
 		# Log some information so it's clear we've bailed out.
-		log(3, "Calculator", "Info", "Call " + str(callNumber), "Failed to find result. Made {0} out of {1} recipes in {2} steps for {3} frames.".format(outputCreated[stepIndex].count(True), TOTAL_RECIPES_NEEDED, stepIndex, totalFrames[stepIndex]))
+		log(3, "Calculator", "Info", "Call " + str(callNumber), "Failed to find result. Made {0} out of {1} recipes in {2} steps for {3} frames.".format(bestRecipesMade, TOTAL_RECIPES_NEEDED, bestStepIndex, bestTotalFrames))
