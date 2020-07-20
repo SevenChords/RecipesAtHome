@@ -430,8 +430,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 	# Repeat recursion until search space has been exhausted
 	#===============================================================================
 
-	#Total number of "recipies" needed to complete a route, including the Chapter 5 step.
-	TOTAL_RECIPIES_NEEDED = 58
+	#Total number of "recipes" needed to complete a route, including the Chapter 5 step.
+	TOTAL_RECIPES_NEEDED = 58
 	#Total frames to choose an additional ingredient (As opposed to just a single ingredient)
 	#This does not include the additional frames needed to navigate to the items that you want to use
 	CHOOSE_2ND_INGREDIENT_FRAMES = 56
@@ -458,7 +458,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 		framesTaken = [0]
 		totalFrames = [0]
 		inventory = [startingInventory]
-		outputCreated = [[False]*TOTAL_RECIPIES_NEEDED]
+		outputCreated = [[False]*TOTAL_RECIPES_NEEDED]
 		legalMoves = []
 		currentFrameRecord = getFastestRecordOnFTP()		
 
@@ -483,7 +483,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 				stepIndex -= 1
 
 			#Check for end condition (57 Recipes + the Chapter 5 intermission, which is treated as an additional "recipe")
-			elif(outputCreated[stepIndex].count(True) == TOTAL_RECIPIES_NEEDED):
+			elif(outputCreated[stepIndex].count(True) == TOTAL_RECIPES_NEEDED):
 				#All Recipes have been fulfilled!
 				#Check that the total time taken is strictly less than the current observed record.
 
@@ -522,10 +522,10 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 
 				#Only evaluate the 57th recipe (Mistake) when its the last recipe to fulfill
 				# This is because it is relatively easy to craft this output with many of the previous outputs, and will take minimal frames
-				if(outputCreated[stepIndex].count(True) == TOTAL_RECIPIES_NEEDED - 1):
-					upperOutputLimit = TOTAL_RECIPIES_NEEDED
+				if(outputCreated[stepIndex].count(True) == TOTAL_RECIPES_NEEDED - 1):
+					upperOutputLimit = TOTAL_RECIPES_NEEDED
 				else:
-					upperOutputLimit = TOTAL_RECIPIES_NEEDED - 1
+					upperOutputLimit = TOTAL_RECIPES_NEEDED - 1
 		
 				for outputItem in range(1,upperOutputLimit):
 					#Only want recipes that haven't already been fulfilled
@@ -947,4 +947,4 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 
 		# We've hit max iteration count, but didn't find a result.
 		# Log some information so it's clear we've bailed out.
-		log(3, "Calculator", "Info", "Call " + str(callNumber), "Failed to find result. Made {0} out of {1} recipies in {2} steps for {3} frames.".format(outputCreated[stepIndex].count(True), TOTAL_RECIPIES_NEEDED, stepIndex, totalFrames[stepIndex]))
+		log(3, "Calculator", "Info", "Call " + str(callNumber), "Failed to find result. Made {0} out of {1} recipes in {2} steps for {3} frames.".format(outputCreated[stepIndex].count(True), TOTAL_RECIPES_NEEDED, stepIndex, totalFrames[stepIndex]))
