@@ -430,6 +430,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 	# Repeat recursion until search space has been exhausted
 	#===============================================================================
 
+	#Total number of "recipes" needed to complete a route, including the Chapter 5 step.
+	TOTAL_RECIPES_NEEDED = 58
 	#Total frames to choose an additional ingredient (As opposed to just a single ingredient)
 	#This does not include the additional frames needed to navigate to the items that you want to use
 	CHOOSE_2ND_INGREDIENT_FRAMES = 56
@@ -450,13 +452,14 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 	#start main loop
 	while(True):
 		stepIndex = 0
+		maxStepIndex = 0
 		iterationCount = 0
 		#State Description for each "Step" taken
 		writtenStep = ["Begin"]
 		framesTaken = [0]
 		totalFrames = [0]
 		inventory = [startingInventory]
-		outputCreated = [[False]*58]
+		outputCreated = [[False]*TOTAL_RECIPES_NEEDED]
 		legalMoves = []
 		currentFrameRecord = getFastestRecordOnFTP()		
 
@@ -464,7 +467,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 
 		#If the iteration count exceeds a given threshold,
 		#Then reset the entire search space and begin anew
-		while(iterationCount < 500000):
+		while(iterationCount < 1000000):
 
 			#Check for bad states to immediately retreat from
 			#The Thunder Rage must remain in the inventory until the Ch.5 Intermission
@@ -481,7 +484,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 				stepIndex -= 1
 
 			#Check for end condition (57 Recipes + the Chapter 5 intermission, which is treated as an additional "recipe")
-			elif(outputCreated[stepIndex].count(True) == 58):
+			elif(outputCreated[stepIndex].count(True) == TOTAL_RECIPES_NEEDED):
 				#All Recipes have been fulfilled!
 				#Check that the total time taken is strictly less than the current observed record.
 
@@ -501,6 +504,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
 
 					return [totalFrames[stepIndex], callNumber]
+
+				log(3, "Calculator", "Info", "Call " + str(callNumber), "Route found, but it's not fast enough. {1} steps in {2} frames is greater than current record of {3}.".format(stepIndex, totalFrames[stepIndex], currentFrameRecord))
 						
 				#Regardless of record status, its time to go back up and find new endstates
 				#Wipe away the current state
@@ -520,10 +525,10 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 
 				#Only evaluate the 57th recipe (Mistake) when its the last recipe to fulfill
 				# This is because it is relatively easy to craft this output with many of the previous outputs, and will take minimal frames
-				if(outputCreated[stepIndex].count(True) == 57):
-					upperOutputLimit = 58
+				if(outputCreated[stepIndex].count(True) == TOTAL_RECIPES_NEEDED - 1):
+					upperOutputLimit = TOTAL_RECIPES_NEEDED
 				else:
-					upperOutputLimit = 57
+					upperOutputLimit = TOTAL_RECIPES_NEEDED - 1
 		
 				for outputItem in range(1,upperOutputLimit):
 					#Only want recipes that haven't already been fulfilled
@@ -898,6 +903,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 						outputCreated[stepIndex + 1][legalMoves[stepIndex][0][1]-1] = True
 
 					stepIndex += 1
+					maxStepIndex = max(stepIndex, maxStepIndex)
 			else:
 				#Pop the 1st instance of the list, as it has already been recursed down
 				legalMoves[stepIndex].pop(0)
@@ -934,11 +940,16 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 						outputCreated[stepIndex + 1][legalMoves[stepIndex][0][1]-1] = True
 
 					stepIndex += 1
+					maxStepIndex = max(stepIndex, maxStepIndex)
 					#logging for progress display
 					iterationCount += 1
 					if(iterationCount % 500000 == 0):
-						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Max steps {3}.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, maxStepIndex))
 					elif(iterationCount % 100000 == 0):
-						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Max steps {3}.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, maxStepIndex))
 					elif(iterationCount % 1000 == 0):
-						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Max steps {3}.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, maxStepIndex))
+
+		# We've hit max iteration count, but didn't find a result.
+		# Log some information so it's clear we've bailed out.
+		log(3, "Calculator", "Info", "Call " + str(callNumber), "Failed to find result. Made {0} out of {1} recipes in {2} steps for {3} frames.".format(outputCreated[stepIndex].count(True), TOTAL_RECIPES_NEEDED, stepIndex, totalFrames[stepIndex]))
