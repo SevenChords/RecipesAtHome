@@ -503,6 +503,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
 
 					return [totalFrames[stepIndex], callNumber]
+
+				log(3, "Calculator", "Info", "Call " + str(callNumber), "Route found, but it's not fast enough. {1} steps in {2} frames is greater than current record of {3}.".format(stepIndex, totalFrames[stepIndex], currentFrameRecord))
 						
 				#Regardless of record status, its time to go back up and find new endstates
 				#Wipe away the current state
