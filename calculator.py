@@ -955,11 +955,11 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 					#logging for progress display
 					iterationCount += 1
 					if(iterationCount % 500000 == 0):
-						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestTotalFrames, bestStepIndex, bestTotalFrames))
+						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestRecipesMade, bestStepIndex, bestTotalFrames))
 					elif(iterationCount % 100000 == 0):
-						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestTotalFrames, bestStepIndex, bestTotalFrames))
+						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestRecipesMade, bestStepIndex, bestTotalFrames))
 					elif(iterationCount % 1000 == 0):
-						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestTotalFrames, bestStepIndex, bestTotalFrames))
+						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations. Best is {3} recipies completed in {4} steps and {5} frames.".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000, bestRecipesMade, bestStepIndex, bestTotalFrames))
 
 		# We've hit max iteration count, but didn't find a result.
 		# Log some information so it's clear we've bailed out.
