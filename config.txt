@@ -30,8 +30,8 @@
 # 0 - Logging Disabled                        #
 # 1 - Logs only new frame records             #
 # 2 - Logs init related stuff                 #
-# 3 - Logs workers every 500k iterations      #
-# 4 - Logs workers every 100k iterations      #
+# 3 - Logs restarts + optimizations           #
+# 4 - Currently unused                        #
 # 5 - Logs some stuff for debugging           #
 # 6 - Logs workers every 1k iterations        #
 # 7 - Logs everything (debugging mode)        #
@@ -56,7 +56,7 @@
 # your CPU (depending on how many you need    #
 # for your other activities)                  #
 ###############################################
-# [workerCount = 8] (default: 4)              #
+# [workerCount = 4] (default: 4)              #
 ###############################################
 
 ###############################################
@@ -64,9 +64,18 @@
 ###############################################
 # Your username under which your records are  #
 # Uploaded to the remote server               #
-# [Username = Cubik]                    #
+# [Username = DefaultUser]                    #
 ###############################################
 
 ###############################################
 # [Version = 3.0.0]                           #
+###############################################
+
+###############################################
+#             Perform Update Check            #
+###############################################
+# Does the update check at the start.         #
+# Don't turn this off unless you're testing   #
+# unreleased versions or are a developer.     #
+# [performUpdateCheck = True] (default: True) #
 ###############################################
