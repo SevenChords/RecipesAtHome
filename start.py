@@ -49,7 +49,8 @@ if __name__ == '__main__':
 	workerCount = int(getConfig("workerCount"))
 	current_frame_record = 9999
 	while(True):
-		#checkForUpdates()
+		if (bool(getConfig("performUpdateCheck") == "True")):
+			checkForUpdates()
 		current_frame_record = getFastestRecordOnFTP()
 		#start the work
 		result = work(startingInventory, recipeList, invFrames, current_frame_record)

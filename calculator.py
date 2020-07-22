@@ -4,7 +4,6 @@ from logger import log
 from inventory import getAlphaSort, getTypeSort, remainingOutputsCanBeFulfilled
 from moves import getInsertionIndex
 from config import getConfig
-from FTPManagement import getFastestRecordOnFTP
 
 #Total frames to choose an additional ingredient (As opposed to just a single ingredient)
 #This does not include the additional frames needed to navigate to the items that you want to use
@@ -629,11 +628,10 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 															  recipeList,
 															  invFrames)
 
-					log(6, "Calculator", "OptimizeRoadmap", "Call " + str(callNumber), "Rearranging Saved {0} Frames!".format(totalFrames[stepIndex]-rearranged_frame_record))
+					log(3, "Calculator", "OptimizeRoadmap", "Call " + str(callNumber), "Rearranging Saved {0} Frames!".format(totalFrames[stepIndex]-rearranged_frame_record))
 
 					if(rearranged_frame_record < current_frame_record):
 						current_frame_record = rearranged_frame_record
-						#printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames)
 						printResults("results/[{0}].txt".format(rearranged_frame_record),rearranged_written_step,rearranged_frames_taken,rearranged_total_frames,rearranged_inventory,rearranged_output_created,itemNames)
 						return [rearranged_frame_record, callNumber]
 						
