@@ -51,5 +51,3 @@ def checkForUpdates():
 			sys.exit()
 	else:
 		log(0, "Update", "Check", "", "There was an error checking for updates. Please ensure you're running the latest release.")
-
-testRecord(3992)
