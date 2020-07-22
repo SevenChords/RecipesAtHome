@@ -8,11 +8,11 @@
 # Biased towards picking moves near the start #
 # of the list that are typically faster:      #
 #                                             #
-# [select = True ](default: True)             #
+# [select = True](default: True)             #
 #                                             #
 ###############################################
 # Randomise completely shuffles legal moves   #
-# for first 50 moves. Randomise is ignored if #
+# for first 60 moves. Randomise is ignored if #
 # Select is set to 'True'                     #
 #                                             #
 # [randomise = False](default: False)         #
@@ -56,7 +56,7 @@
 # your CPU (depending on how many you need    #
 # for your other activities)                  #
 ###############################################
-# [workerCount = 4] (default: 4)              #
+# [workerCount = 8] (default: 4)              #
 ###############################################
 
 ###############################################
@@ -64,9 +64,9 @@
 ###############################################
 # Your username under which your records are  #
 # Uploaded to the remote server               #
-# [Username = DefaultUser]                    #
+# [Username = Cubik]                    #
 ###############################################
 
 ###############################################
-# [Version = 2.3.4]                           #
+# [Version = 3.0.0]                           #
 ###############################################
