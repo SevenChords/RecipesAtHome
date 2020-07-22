@@ -50,12 +50,12 @@ if __name__ == '__main__':
 	current_frame_record = 9999
 	while(True):
 		#checkForUpdates()
-		#current_frame_record = getFastestRecordOnFTP()
+		current_frame_record = getFastestRecordOnFTP()
 		#start the work
 		result = work(startingInventory, recipeList, invFrames, current_frame_record)
 		#sanity check
 		if(result[0] < current_frame_record):
-			#testRecord(result[0])
+			testRecord(result[0])
 			current_frame_record = result[0]
 			log(1, "Main", "Results", "", 'cycle {0} done, current record: {1} frames. Record on call {2}.'.format(cycle_count, current_frame_record, result[1]))
 		cycle_count += 1
