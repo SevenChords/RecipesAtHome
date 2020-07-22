@@ -19,4 +19,5 @@ def log(level, process, subProcess, activity, entry):
 		   formattedEntry = "[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "][" + process + "] " + entry + "\n"
 		mmLogFileObject.write(formattedEntry)
 		mmLogFileObject.flush()
-		print(formattedEntry, sys.stdout.flush())
+		print(formattedEntry, end="")
+		sys.stdout.flush()
