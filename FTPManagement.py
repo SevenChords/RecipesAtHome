@@ -1,73 +1,52 @@
 import re
 import sys
-from ftplib import FTP
+import requests
+import json
 from logger import log
 from config import getConfig
 
-ftp = FTP("ftp.byethost7.com")
-ftp.login("b7_26300774", "Wxu8dLdV2/")
-ftp.cwd("htdocs/roadmap")
-
 def getFastestRecordOnFTP():
-	ftp = FTP("ftp.byethost7.com")
-	ftp.login("b7_26300774", "Wxu8dLdV2/")
-	ftp.cwd("htdocs/roadmap/results")
-	files = []
-	try:
-		files = ftp.nlst()
-		files.pop(0)
-		files.pop(0)
-		temp = files[0]
-	except:
-		log(0, "FTP", "List", "Read", "CRITICAL: No files found. Creating empty [9999].txt")
-		file = open("results/[9999].txt", "w")
-		file.write("temp file\n")
-		file.close()
-		with open("results/[9999].txt", "rb") as localFile:
-			ftp.storlines("STOR %s" % "[9999].txt", localFile)
-		localFile.close()
-		files = ftp.nlst()
-		files.pop(0)
-		files.pop(0)
-		temp = files[0]
-	records = []
-	for file in files:
-		record = int(re.findall("\[([^\s\]]*)\]", file)[0])
-		records.append(record)
-	records.sort()
-	ftp.quit()
-	return records[0]
+	url_with_fastest = "https://hundorecipes.blob.core.windows.net/foundpaths/fastestFrames.txt"
+	req = requests.get(url_with_fastest)
+	if(req.ok):
+		return int(req.text)
+	else:
+		log(0, "Network", "Check", "", "There was an error getting the fastest record. Proceeding with a fastest record of 9999.")
+		return 9999
 
 def testRecord(value):
 	remoteRecord = getFastestRecordOnFTP()
 	localRecord = value
-	ftp = FTP("ftp.byethost7.com")
-	ftp.login("b7_26300774", "Wxu8dLdV2/")
-	ftp.cwd("htdocs/roadmap/results")
 	if(localRecord <= remoteRecord):
+		url_to_submit = "https://hundorecipes.azurewebsites.net/api/uploadAndVerify"
 		with open("results/[" + str(localRecord) + "].txt", "rb") as localFile:
-			ftp.storlines("STOR %s" % "[" + str(localRecord) + "]_" + getConfig("Username") + ".txt", localFile)
+			dataToSend = {
+				'frames': localRecord,
+				'userName': getConfig("Username"),
+				'routeContent': localFile.read().decode("utf-8")
+			}
+			r = requests.post(url_to_submit, data = json.dumps(dataToSend))
+			if (r.ok):
+				log(1, "Submit", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
+			else:
+				log(1, "Submit", "File", "Upload", "There was a problem uploading file [" + str(localRecord) + "].txt. Message returned by the server was: " + r.text)
 		localFile.close()
-		log(1, "FTP", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
-	ftp.quit()
 
 def checkForUpdates():
-	log(0, "Update", "Check", "", "Checking for updates...")
-	ftp = FTP("ftp.byethost7.com")
-	ftp.login("b7_26300774", "Wxu8dLdV2/")
-	ftp.cwd("htdocs/roadmap/version")
-	try:
-		files = ftp.nlst()
-		files.pop(0)
-		files.pop(0)
-		remoteVersion = str(re.findall("\[([^\s\]]*)\]", files[0])[0])
+	url_for_update_check = "https://api.github.com/repos/SevenChords/RecipesAtHome/releases/latest"
+	req = requests.get(url_for_update_check)
+	jsonBlob = req.json()
+	remoteVersion = jsonBlob.get('tag_name')
+	if(remoteVersion):
 		localVersion = getConfig("Version")
+		if(localVersion[0] != 'v'):
+			localVersion = 'v' + localVersion
 		if(remoteVersion == localVersion):
 			log(0, "Update", "Check", "", "You are running the newest release of this script.\nHappy calculation time!")
 			return True
 		else:
 			log(0, "Update", "Check", "", "You are running the wrong version of this script, please get the newest release from github.")
-			inpu()
+			input()
 			sys.exit()
-	except:
-		raise
+	else:
+		log(0, "Update", "Check", "", "There was an error checking for updates. Please ensure you're running the latest release.")
