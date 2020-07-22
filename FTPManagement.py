@@ -29,7 +29,7 @@ def testRecord(value):
 			if (r.ok):
 				log(1, "Submit", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
 			else:
-				log(1, "Submit", "File", "Upload", "There was a problem uploading file [" + str(localRecord) + "].txt.")
+				log(1, "Submit", "File", "Upload", "There was a problem uploading file [" + str(localRecord) + "].txt. Message returned by the server was: " + r.text)
 		localFile.close()
 
 def checkForUpdates():
