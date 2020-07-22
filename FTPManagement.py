@@ -25,7 +25,6 @@ def testRecord(value):
 				'userName': getConfig("Username"),
 				'routeContent': localFile.read().decode("utf-8")
 			}
-			print(dataToSend)
 			r = requests.post(url_to_submit, data = json.dumps(dataToSend))
 			if (r.ok):
 				log(1, "Submit", "File", "Upload", "File [" + str(localRecord) + "].txt has been uploaded.")
