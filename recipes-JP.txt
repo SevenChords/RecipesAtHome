@@ -390,19 +390,27 @@ Fresh Juice
 Inky Sauce
 Icicle Pop
 Zess Frappe
-Snow Bunny
 Coco Candy
 Honey Candy
 Jelly Candy
 Electro Pop
 Fire Pop
 Space Food
-Poison Shroom
 Trial Stew
 Courage Meal
 Coconut Bomb
 Egg Bomb
 Zess Dynamite
+Courage Shell
+Hot Dog
+Ice Storm
+Mystery
+Ruin Powder
+Shooting Star
+Shroom Fry
+Tasty Tonic
+Thunder Bolt
+Thunder Rage
 ===
 Dried Bouquet
 ---

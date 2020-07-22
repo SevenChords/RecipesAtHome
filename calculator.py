@@ -6,7 +6,26 @@ from moves import getInsertionIndex
 from config import getConfig
 from FTPManagement import getFastestRecordOnFTP
 
-def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, outputCreated, itemNames, stepIndex):
+#Total frames to choose an additional ingredient (As opposed to just a single ingredient)
+#This does not include the additional frames needed to navigate to the items that you want to use
+CHOOSE_2ND_INGREDIENT_FRAMES = 56
+#Total frames to toss any item (As opposed to the item being automatically placed in a NULL space)
+#This does not include the additional frames needed to navigate to the item that you want to toss
+TOSS_FRAMES = 32
+#Frames needed to sort the inventory by each method
+ALPHA_SORT_FRAMES = 38
+REVERSE_ALPHA_SORT_FRAMES = 40
+TYPE_SORT_FRAMES = 39
+REVERSE_TYPE_SORT_FRAMES = 41
+#If the player does not toss the final output item, 5 extra frames are needed to obtain jump storage
+JUMP_STORAGE_NO_TOSS_FRAMES = 5
+
+#Finished Roadmaps can potentially have some legal moves rearranged to faster points in time
+#Give the search space some buffer frames so that if a roadmap is discovered that is "close" to the frame record,
+#Perform optimal shuffling of the moves to find the best possible rearranged roadmap and evaluate for new records
+BUFFER_SEARCH_FRAMES = 200
+
+def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, outputCreated, itemNames):
 	#Print the results of all states observed in the current stack
 	file = open(filename, "w")
 	#Write Header information
@@ -18,11 +37,11 @@ def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, out
 	file.write("\n")
 	log(5, "Calculator", "File", "Write", "Header for " + filename + " written.")
 	#Print data information
-	for i in range(0, stepIndex + 1):
+	for i in range(0, len(writtenStep)):
 		file.write("{0}\t{1}\t{2}".format(writtenStep[i],framesTaken[i],totalFrames[i]))
-		for z in range(0,20):
+		for z in range(20):
 			file.write("\t{0}".format(inventory[i][z]))
-		for z in range(0,58):
+		for z in range(58):
 			file.write("\t{0}".format(outputCreated[i][z]))
 		file.write("\n")
 		log(5, "Calculator", "File", "Write", "Data for Step " + str(writtenStep[i]) + " written.")
@@ -49,11 +68,10 @@ def getSortedInventory(inventory, full_sorted_list, is_reversed):
 	return sorted_inventory
 
 def handleChapter5EarlySortEndItems(legal_moves, step_index, inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, SORT_FRAMES, sort_name, temp_frames_DB, temp_frames_CO, DB_place_index, CO_place_index):
-	TOSS_FRAMES = 23
 	#Place the Keel Mango and Courage Shell
 	for KM_place_index in range(0,10):
 		for CS_place_index in range(0,10):
-			#Check that the KM and CS don't replace DB or CO
+			#Check that the KM and CS don't replace DB, CO, or TR
 			if(inventory[KM_place_index] != "Dried Bouquet" and
 			   inventory[CS_place_index] != "Dried Bouquet" and
 			   inventory[KM_place_index] != "Coconut" and
@@ -108,7 +126,6 @@ def handleChapter5EarlySortEndItems(legal_moves, step_index, inventory, tempOutp
 				inventory[TR_use_index] = "Thunder Rage"
 
 def handleChapter5LateSortEndItems(legal_moves, step_index, inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, SORT_FRAMES, sort_name, temp_frames_DB, temp_frames_CO, temp_frames_KM, DB_place_index, CO_place_index, KM_place_index):
-	TOSS_FRAMES = 23
 	#Place the Courage Shell
 	for CS_place_index in range(0,10):
 		#Check that the Courage Shell doesn't replace DB, CO, or KM
@@ -160,13 +177,6 @@ def handleChapter5LateSortEndItems(legal_moves, step_index, inventory, tempOutpu
 #Evaluates all possible placements of the Keel Mango and Courage Shell
 #And all possible locations and types of sorting that can place the Coconut into a position where it can be duplicated
 def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, full_alpha_list, full_type_list):
-	#Various Frame Counts
-	TOSS_FRAMES = 23
-	ALPHA_SORT_FRAMES = 38
-	REVERSE_ALPHA_SORT_FRAMES = 40
-	TYPE_SORT_FRAMES = 39
-	REVERSE_TYPE_SORT_FRAMES = 41
-
 	#For descriptive purposes later
 	DB_place_index = temp_inventory.index("Dried Bouquet")
 	CO_place_index = temp_inventory.index("Coconut")
@@ -268,10 +278,18 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 	KM_upper_bound = 10
 
 	#Restrict the bounds if there is still a "NULL" in the inventory
-	#Because the Keel Mango can only go into the first available NULL spot
+	#Because the Keel Mango can only go into the first slot
 	if("NULL" in temp_inventory):
-		KM_lower_bound = temp_inventory.index("NULL")
-		KM_upper_bound = KM_lower_bound + 1
+		KM_lower_bound = 0
+		KM_upper_bound = 1
+
+		#Update the inventory such that all items above the NULL are moved down one place
+		#And the KM is placed into slot 1
+		for index_eval in range(temp_inventory.index("NULL"),0,-1):
+			temp_inventory[index_eval] = temp_inventory[index_eval-1]
+
+		#The vacancy at the start of the inventory is now occupied with the new item
+		temp_inventory[0] = "Keel Mango"
 
 	#Place the Keel Mango
 	for KM_place_index in range(KM_lower_bound,KM_upper_bound):
@@ -381,7 +399,118 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 		#Return the replaced items for the next loop
 		temp_inventory[KM_place_index] = KM_replacement
 
-def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
+#OptimizeRoadMap
+#Rearranges a given roadmap where possible to reduce the total number of frames
+#Only works for legal moves that don't alter the inventory
+def OptimizeRoadMap(written_step,
+					frames_taken,
+					total_frames,
+					inventory,
+					output_created,
+					ITEM_NAMES,
+					RECIPE_LIST,
+					INV_FRAMES):
+	
+	#List of ingredients that can be potentially rearranged into a better location within the roadmap
+	rearranged_items = []
+
+	#Determine which steps can be rearranged
+	#Evaluate the list in reverse order for easy list manipulation
+	#The first and last step won't be changed
+	for i in range(len(written_step)-2,0,-1):
+		if("(and toss)" in written_step[i]):
+			#This item can potentially be relocated to a quicker time
+			tossed_item = written_step[i].split(") ")[-1]
+			rearranged_items.append(tossed_item)
+			written_step.pop(i)
+			frames_taken.pop(i)
+			total_frames.pop(i)
+			inventory.pop(i)
+			output_created.pop(i)
+
+			#Wipe that the output has been created for the item being rearranged
+			for j in range(i,len(written_step)):
+				output_created[j][ITEM_NAMES.index(tossed_item)] = False
+	
+	#Now that all rearranged items have been removed
+	#Find The optimal place they can be inserted again, such that they don't affect the inventory
+	for i in rearranged_items:
+		#Establish a default bound for the optimal place for this item
+		record_frames = 9999
+		record_placement_index = -1
+		record_description = ""
+
+		#Evaluate all recipes and determine the optimal recipe and location
+		for recipe in RECIPE_LIST[ITEM_NAMES.index(i)+1]["RECIPES"]:
+			for interval in range(0,len(inventory)):
+				#Only want recipes where all ingredients are in the last 10 slots of the evaluated inventory
+				if(all([ingredient in inventory[interval] for ingredient in recipe])):
+					if(all([inventory[interval].index(ingredient) >= 10 for ingredient in recipe])):
+						#The very first recipe fulfillment (if we're evaluating there)
+						#must take a single ingredient
+						if(interval > 0 or len(recipe) == 1):
+							#This is a valid recipe and location to fulfill (and toss) this output item
+							#Calculate the frames needed to produce this step
+							temp_frames = TOSS_FRAMES
+							temp_use_desc = ""
+
+							if(len(recipe) == 1):
+								#Only one ingredient to navigate to
+								temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
+								temp_use_desc = "Use {0} in slot {1} ".format(recipe[0],inventory[interval].index(recipe[0])+1)
+							else:
+								#Two ingredients to navitgate to, but order matters
+								#Pick the larger-index number ingredient first, as it will reduce the frames needed to
+								#reach the other ingredient
+								temp_frames += CHOOSE_2ND_INGREDIENT_FRAMES
+								if(inventory[interval].index(recipe[0]) > inventory[interval].index(recipe[1])):
+									temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
+									temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
+									temp_use_desc = "Use {0} in slot {1} and {2} in slot {3} ".format(recipe[0],
+																									  inventory[interval].index(recipe[0])+1,
+																									  recipe[1],
+																									  inventory[interval].index(recipe[1])+1)
+								else:
+									temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
+									temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
+									temp_use_desc = "Use {0} in slot {1} and {2} in slot {3} ".format(recipe[1],
+																									  inventory[interval].index(recipe[1])+1,
+																									  recipe[0],
+																									  inventory[interval].index(recipe[0])+1)
+							
+							#Compare the temp frames to the current record
+							if(temp_frames < record_frames):
+								#Update the record information
+								record_frames = temp_frames
+								record_placement_index = interval
+								record_description = temp_use_desc + "to make (and toss) {0}".format(i)
+
+		#All recipes and intervals have been evaluated
+		#Insert the optimized output in the designated interval
+		if(record_placement_index != -1):
+			written_step.insert  (record_placement_index+1, record_description)
+			frames_taken.insert  (record_placement_index+1, record_frames)
+			total_frames.insert  (record_placement_index+1, 0)
+			inventory.insert     (record_placement_index+1,copy.copy(inventory     [record_placement_index]))
+			output_created.insert(record_placement_index+1,copy.copy(output_created[record_placement_index]))
+
+			#Update that the output is now being created in the new location
+			for j in range(record_placement_index+1,len(written_step)):
+				output_created[j][ITEM_NAMES.index(i)] = True
+		else:
+			#This is an error
+			log(7, "Calculator", "Roadmap", "Optimize", "OptimizeRoadmap couldn't find valid placement of {0}".format(i))
+	
+	#All items have been rearranged and placed into a new roadmap
+	#Re-calculate the total frame count
+	for i in range(1,len(written_step)):
+		total_frames[i] = total_frames[i-1] + frames_taken[i]
+
+	return total_frames[-1]
+
+#The primary subroutine:
+#Search the entire space for possible roadmaps to fulfilling all recipes as quickly as possible
+def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current_frame_record):
 	itemNames = []
 	#Fill the itemNames
 	for item in recipeList:
@@ -430,22 +559,11 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 	# Repeat recursion until search space has been exhausted
 	#===============================================================================
 
-	#Total frames to choose an additional ingredient (As opposed to just a single ingredient)
-	#This does not include the additional frames needed to navigate to the items that you want to use
-	CHOOSE_2ND_INGREDIENT_FRAMES = 56
-	#Total frames to toss any item (As opposed to the item being automatically placed in a NULL space)
-	#This does not include the additional frames needed to navigate to the item that you want to toss
-	TOSS_FRAMES = 23
-	#Frames needed to sort the inventory by each method
-	ALPHA_SORT_FRAMES = 38
-	REVERSE_ALPHA_SORT_FRAMES = 40
-	TYPE_SORT_FRAMES = 39
-	REVERSE_TYPE_SORT_FRAMES = 41
-	#If the player does not toss the final output item, 5 extra frames are needed to obtain jump storage
-	JUMP_STORAGE_NO_TOSS_FRAMES = 5
-
 	sorted_alpha_list = getAlphaSort()
 	sorted_type_list = getTypeSort()
+	
+	#How many times a worker is evaluating a new random branch
+	total_dives = 0
 
 	#start main loop
 	while(True):
@@ -458,13 +576,13 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 		inventory = [startingInventory]
 		outputCreated = [[False]*58]
 		legalMoves = []
-		currentFrameRecord = getFastestRecordOnFTP()		
 
-		log(3, "Calculator", "Info", "Call " + str(callNumber),"Searching New Branch")
+		total_dives += 1
+		log(3, "Calculator", "Info", "Call " + str(callNumber),"Searching New Branch #{0}".format(total_dives))
 
 		#If the iteration count exceeds a given threshold,
 		#Then reset the entire search space and begin anew
-		while(iterationCount < 500000):
+		while(iterationCount < 100000):
 
 			#Check for bad states to immediately retreat from
 			#The Thunder Rage must remain in the inventory until the Ch.5 Intermission
@@ -493,14 +611,31 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 				else:
 					writtenStep[-1] += " (Jump Storage on Tossed Item)"
 		
-				if(totalFrames[stepIndex] < currentFrameRecord):
-					#New Record!
-					currentFrameRecord = totalFrames[stepIndex]
-					#print("New Record Time: {0}".format(totalFrames[stepIndex]))
-					#Log the updated outcome
-					printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames,stepIndex)
+				if(totalFrames[stepIndex] < current_frame_record + BUFFER_SEARCH_FRAMES):
+					#A finished roadmap has been generated
+					#Evaluate the roadmap to determine where moves can be reallocated for quicker access of ingredients
+					rearranged_written_step = copy.deepcopy(writtenStep)
+					rearranged_frames_taken = copy.deepcopy(framesTaken)
+					rearranged_total_frames = copy.deepcopy(totalFrames)
+					rearranged_inventory =    copy.deepcopy(inventory)
+					rearranged_output_created = copy.deepcopy(outputCreated)
 
-					return [totalFrames[stepIndex], callNumber]
+					rearranged_frame_record = OptimizeRoadMap(rearranged_written_step,
+															  rearranged_frames_taken,
+															  rearranged_total_frames,
+															  rearranged_inventory,
+															  rearranged_output_created,
+															  itemNames,
+															  recipeList,
+															  invFrames)
+
+					log(6, "Calculator", "OptimizeRoadmap", "Call " + str(callNumber), "Rearranging Saved {0} Frames!".format(totalFrames[stepIndex]-rearranged_frame_record))
+
+					if(rearranged_frame_record < current_frame_record):
+						current_frame_record = rearranged_frame_record
+						#printResults("results/[{0}].txt".format(totalFrames[stepIndex]),writtenStep,framesTaken,totalFrames,inventory,outputCreated,itemNames)
+						printResults("results/[{0}].txt".format(rearranged_frame_record),rearranged_written_step,rearranged_frames_taken,rearranged_total_frames,rearranged_inventory,rearranged_output_created,itemNames)
+						return [rearranged_frame_record, callNumber]
 						
 				#Regardless of record status, its time to go back up and find new endstates
 				#Wipe away the current state
@@ -625,10 +760,13 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 								#Handle allocation of the OUTPUT variable
 								#Options vary by whether there are "NULL"s within the inventory
 								try:
-									#If there are NULLs in the inventory. The output will always go to 1st NULL in the inventory 
-									placedIndex = tempInventory.index("NULL")
+									#If there are NULLs in the inventory,
+									#All items before the 1st NULL get moved down 1 position									
+									for index_eval in range(tempInventory.index("NULL"),0,-1):
+										tempInventory[index_eval] = tempInventory[index_eval-1]
 
-									tempInventory[placedIndex] = recipeList[outputItem]["NAME"]
+									#The vacancy at the start of the inventory is now occupied with the new item
+									tempInventory[0] = recipeList[outputItem]["NAME"]
 
 									#Check to see if this state is viable
 									if(remainingOutputsCanBeFulfilled(tempInventory, tempOutputsFulfilled, recipeList, itemNames)):
@@ -636,7 +774,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 										#Determine where to insert this legal move into the list of legal moves (Sorted by frames taken)
 										insertIndex = getInsertionIndex(legalMoves, stepIndex, tempFrames)
 
-										placeDescription = "to make {0}, auto-placed in slot {1}".format(itemNames[outputItem-1],placedIndex+1)
+										placeDescription = "to make {0}, auto-placed in slot 1".format(itemNames[outputItem-1])
 										legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,tempFrames,tempInventory])
 								except:
 									#There are no NULLs in the inventory. Something must be tossed
@@ -655,11 +793,6 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 									#Evaluate the viability of tossing all current inventory items
 									#Assumed that it is impossible to toss and replace any items in the last 10 positions
 									for tossedIndex in range(0,10):
-										#Only interested in slots that contain an actual item
-										if(tempInventory[tossedIndex] == "NULL" or
-										   tempInventory[tossedIndex] == "BLOCKED"):
-											log(2, "Calculator", "Warn", "", "Shouldn't be here!")
-											input()
 										#Make a copy of the tempInventory with the replaced item
 										replacedInventory = copy.copy(tempInventory)
 										replacedInventory[tossedIndex] = itemNames[outputItem-1]
@@ -672,8 +805,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 											insertIndex = getInsertionIndex(legalMoves, stepIndex, replacedFrames)
 										
 											placeDescription = "to make {0}, toss {1} in slot {2}".format(itemNames[outputItem-1],
-																										   tossedItemName,
-																										   tossedIndex+1)
+																										  tossedItemName,
+																										  tossedIndex+1)
 											legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,replacedFrames,replacedInventory])
 
 				#=========================================================================================			
@@ -705,27 +838,40 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 
 					#Handle allocation of the first 2 Ch.5 Items (Dried Bouquet and Coconut)	
 					if(tempInventory.count("NULL") >= 2):
-						#The Dried Bouquet gets Auto Placed in the 1st available NULL
-						tempindexDB = tempInventory.index("NULL")
-						tempInventory[tempindexDB] = "Dried Bouquet"
-						
+						#The Dried Bouquet gets Auto Placed in the 1st slot...
+						#And everything else gets shifted down one to fill the first NULL 
+						for index_eval in range(tempInventory.index("NULL"),0,-1):
+							tempInventory[index_eval] = tempInventory[index_eval-1]
+
+						#The vacancy at the start of the inventory is now occupied with the new item
+						tempInventory[0] = "Dried Bouquet"
+						tempindexDB = 1						
+
+						#The Coconut gets Auto Placed in the 1st slot...
+						#And everything else gets shifted down one to fill the first NULL 
+						for index_eval in range(tempInventory.index("NULL"),0,-1):
+							tempInventory[index_eval] = tempInventory[index_eval-1]
+
+						#The vacancy at the start of the inventory is now occupied with the new item
+						tempInventory[0] = "Coconut"
+						tempindexCO = 1
+
 						#Auto Placing takes zero frames
 						temp_frames_DB = 0
-
-						#The Coconut gets Auto Placed in the 2nd available NULL
-						tempindexCO = tempInventory.index("NULL")
-						tempInventory[tempindexCO] = "Coconut"
-
-						#Auto Placing takes zero frames
 						temp_frames_CO = 0
 						
 						#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
 						handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
 
 					elif(tempInventory.count("NULL") == 1):
-						#The Dried Bouquet gets Auto Placed in the 1st available NULL
-						tempindexDB = tempInventory.index("NULL")
-						tempInventory[tempindexDB] = "Dried Bouquet"
+						#The Dried Bouquet gets Auto Placed in the 1st slot...
+						#And everything else gets shifted down one to fill the first NULL 
+						for index_eval in range(tempInventory.index("NULL"),0,-1):
+							tempInventory[index_eval] = tempInventory[index_eval-1]
+
+						#The vacancy at the start of the inventory is now occupied with the new item
+						tempInventory[0] = "Dried Bouquet"
+						tempindexDB = 0
 
 						#Auto Placing takes zero frames
 						temp_frames_DB = 0
@@ -855,7 +1001,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 				#=====================================
 
 				#Filter out all legal moves that would exceed the current frame limit
-				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < currentFrameRecord, legalMoves[stepIndex]))
+				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < (current_frame_record + BUFFER_SEARCH_FRAMES), legalMoves[stepIndex]))
 			
 				#Filter out all legal moves that use 2 ingredients in the very first legal move
 				if(stepIndex == 0):
@@ -863,15 +1009,15 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 
 				#Somewhat Random process of picking the quicker moves to recurse down
 				#Arbitrarilty remove the first listed move with a given probability
-				if(select and stepIndex < 50) :
+				if(select) :
 					total_moves = len(legalMoves[stepIndex])
-					while(total_moves > 1 and random.random() < (total_moves-2.0)/total_moves):
+					while(total_moves > 1 and random.random() < 0.5):
 						total_moves = len(legalMoves[stepIndex])
 						legalMoves[stepIndex].pop(0)
 
 				#When not doing the "Select" methodology, and opting for Randomize
 				#Just shuffle the entire list of legal moves and pick the new first item
-				elif(randomise and stepIndex < 50):
+				elif(randomise):
 					random.shuffle(legalMoves[stepIndex])
 
 				if(len(legalMoves[stepIndex]) == 0):
@@ -903,12 +1049,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 				legalMoves[stepIndex].pop(0)
 
 				#Filter out all legal moves that would exceed the current frame limit
-				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < currentFrameRecord, legalMoves[stepIndex]))
-
-				#Just because, if the step index is sufficiently small, just shuffle!
-				if(randomise):
-					if(stepIndex < 20):
-						random.shuffle(legalMoves[stepIndex])
+				legalMoves[stepIndex] = list(filter(lambda x: x[2]+totalFrames[stepIndex] < (current_frame_record + BUFFER_SEARCH_FRAMES), legalMoves[stepIndex]))
 
 				if(len(legalMoves[stepIndex]) == 0):
 					#No legal moves are left to evaluate, go back up...
@@ -936,9 +1077,5 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames):
 					stepIndex += 1
 					#logging for progress display
 					iterationCount += 1
-					if(iterationCount % 500000 == 0):
-						log(3, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
-					elif(iterationCount % 100000 == 0):
-						log(4, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
-					elif(iterationCount % 1000 == 0):
-						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken using {1} frames; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
+					if(iterationCount % 1000 == 0):
+						log(6, "Calculator", "Info", "Call " + str(callNumber), "{0} Steps taken currently, {1} frames accumulated so far; {2}k iterations".format(stepIndex, totalFrames[stepIndex], iterationCount / 1000))
