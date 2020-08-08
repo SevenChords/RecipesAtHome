@@ -22,7 +22,7 @@ JUMP_STORAGE_NO_TOSS_FRAMES = 5
 #Finished Roadmaps can potentially have some legal moves rearranged to faster points in time
 #Give the search space some buffer frames so that if a roadmap is discovered that is "close" to the frame record,
 #Perform optimal shuffling of the moves to find the best possible rearranged roadmap and evaluate for new records
-BUFFER_SEARCH_FRAMES = 200
+BUFFER_SEARCH_FRAMES = 120
 
 def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, outputCreated, itemNames):
 	#Print the results of all states observed in the current stack
@@ -66,119 +66,152 @@ def getSortedInventory(inventory, full_sorted_list, is_reversed):
 
 	return sorted_inventory
 
-def handleChapter5EarlySortEndItems(legal_moves, step_index, inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, SORT_FRAMES, sort_name, temp_frames_DB, temp_frames_CO, DB_place_index, CO_place_index):
+#Handles Allocation of the Keel Mango and Courage Shell
+#Both of which happen *after* the sort to correctly place the Coconut in a location
+#Where it can be duplicated
+def handleChapter5EarlySortEndItems(legal_moves,
+									step_index,
+									inventory,
+									tempOutputsFulfilled,
+									recipeList,
+									itemNames,
+									invFrames,
+									SORT_FRAMES,
+									sort_name,
+									temp_frames_DB,
+									temp_frames_CO,
+									DB_place_index,
+									CO_place_index):
 	#Place the Keel Mango and Courage Shell
 	for KM_place_index in range(0,10):
-		for CS_place_index in range(0,10):
-			#Check that the KM and CS don't replace DB, CO, or TR
-			if(inventory[KM_place_index] != "Dried Bouquet" and
-			   inventory[CS_place_index] != "Dried Bouquet" and
-			   inventory[KM_place_index] != "Coconut" and
-			   inventory[CS_place_index] != "Coconut" and
-			   inventory[KM_place_index] != "Thunder Rage" and
-			   inventory[CS_place_index] != "Thunder Rage" and
-			   KM_place_index != CS_place_index):
-				#Replace the items, remember what they were
-				KM_replacement = inventory[KM_place_index]
-				CS_replacement = inventory[CS_place_index]
+		for CS_place_index in range(KM_place_index+1,10):
 
-				inventory[KM_place_index] = "Keel Mango"
-				inventory[CS_place_index] = "Courage Shell"
+			#Replace the 1st chosen item with the KM
+			kmcs_temp_inventory = copy.copy(inventory)
+			for index_eval in range(KM_place_index,0,-1):
+				kmcs_temp_inventory[index_eval] = kmcs_temp_inventory[index_eval-1]
+			
+			kmcs_temp_inventory[0] = "Keel Mango"
 
-				#Once all Chapter 5 Items are placed
+			#Replace the 2nd chosen item with the CO
+			for index_eval in range(CS_place_index,0,-1):
+				kmcs_temp_inventory[index_eval] = kmcs_temp_inventory[index_eval-1]
+			
+			kmcs_temp_inventory[0] = "Courage Shell"
+
+			#Ensure the Thunder Rage is still in the inventory
+			if(kmcs_temp_inventory.count("Thunder Rage") == 1):
 				#The next event is using the Thunder Rage item before resuming the 2nd session of recipe fulfillment
-				TR_use_index = inventory.index("Thunder Rage")
+				TR_use_index = kmcs_temp_inventory.index("Thunder Rage")
 
 				if(TR_use_index < 10):
 					#Using the Thunder Rage will cause a NULL to appear in that slot
-					inventory[TR_use_index] = "NULL"
+					kmcs_temp_inventory[TR_use_index] = "NULL"
 
-				#Verify that this new inventory is at least capable of satisfying the remaining recipes
-				if(remainingOutputsCanBeFulfilled(inventory, tempOutputsFulfilled, recipeList, itemNames)):
-					#Calculate the overall frame count
-					temp_frames_KM = TOSS_FRAMES + invFrames[20-inventory.count("BLOCKED")][KM_place_index]
-					temp_frames_CS = TOSS_FRAMES + invFrames[20-inventory.count("BLOCKED")][CS_place_index]
-					temp_frames_TR =               invFrames[20-inventory.count("BLOCKED")][TR_use_index]
-					temp_frame_sum = (temp_frames_DB +
-					                 temp_frames_CO +
-									 temp_frames_KM +
-									 temp_frames_CS +
-									 temp_frames_TR +
-									 SORT_FRAMES)
+				#Calculate the frames of these actions
+				temp_frames_KM = TOSS_FRAMES + invFrames[20-kmcs_temp_inventory.count("BLOCKED")][KM_place_index]
+				temp_frames_CS = TOSS_FRAMES + invFrames[20-kmcs_temp_inventory.count("BLOCKED")][CS_place_index]
+				temp_frames_TR =               invFrames[20-kmcs_temp_inventory.count("BLOCKED")][TR_use_index]
+				temp_frame_sum = (temp_frames_DB +
+								temp_frames_CO +
+								temp_frames_KM +
+								temp_frames_CS +
+								temp_frames_TR +
+								SORT_FRAMES)
 
+				#Determine if the remaining inventory is sufficient to fulfill all remaining recipes
+				if(remainingOutputsCanBeFulfilled(kmcs_temp_inventory, tempOutputsFulfilled, recipeList, itemNames)):
 					#Get the index on where to insert this legal move to
 					insertIndex = getInsertionIndex(legal_moves, step_index, temp_frame_sum)
 
 					#Describe how the break should play out
-					desc = "Ch.5 Break: DB in slot {1}, CO in slot {2}, Sort ({0}), KM in slot {3}, CS in slot {4}, Use TR in slot {5}".format(sort_name,
-																																			   DB_place_index+1,
-																																		       CO_place_index+1,
-																																		       KM_place_index+1,
-																																		       CS_place_index+1,
-																																			   TR_use_index+1)
+					desc = "Ch.5 Break: Replace #{1} for DB, Replace #{2} for CO, Sort ({0}), Replace #{3} for KM, replace #{4} for CS, Use TR in #{5}".format(sort_name,
+																																			   				   DB_place_index+1,
+																																		       				   CO_place_index+1,
+																																		       				   KM_place_index+1,
+																																		       				   CS_place_index+1,
+																																			   				   TR_use_index+1)
 					#Append the Legal Move
-					legal_moves[step_index].insert(insertIndex,[desc,58,temp_frame_sum,copy.copy(inventory)])
+					legal_moves[step_index].insert(insertIndex,[desc,58,temp_frame_sum,copy.copy(kmcs_temp_inventory)])
 
-				#Return the replaced items for the next loop
-				inventory[KM_place_index] = KM_replacement
-				inventory[CS_place_index] = CS_replacement
-				inventory[TR_use_index] = "Thunder Rage"
-
-def handleChapter5LateSortEndItems(legal_moves, step_index, inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, SORT_FRAMES, sort_name, temp_frames_DB, temp_frames_CO, temp_frames_KM, DB_place_index, CO_place_index, KM_place_index):
+#Handles Allocation of the Courage Shell
+#The inventory has already had the keel mango placed,
+#and a sort has occurred to place the coconut into a location
+#where it can be duplicated.
+def handleChapter5LateSortEndItems(legal_moves,
+								   step_index,
+								   inventory,
+								   tempOutputsFulfilled,
+								   recipeList,
+								   itemNames,
+								   invFrames,
+								   SORT_FRAMES,
+								   sort_name,
+								   temp_frames_DB,
+								   temp_frames_CO,
+								   temp_frames_KM,
+								   DB_place_index,
+								   CO_place_index,
+								   KM_place_index):
 	#Place the Courage Shell
 	for CS_place_index in range(0,10):
-		#Check that the Courage Shell doesn't replace DB, CO, or KM
-		if(inventory[CS_place_index] != "Dried Bouquet" and
-		   inventory[CS_place_index] != "Coconut" and
-		   inventory[CS_place_index] != "Keel Mango" and
-		   inventory[CS_place_index] != "Thunder Rage"):
-			#Replace the item, remember what it was
-			CS_replacement = inventory[CS_place_index]
-			inventory[CS_place_index] = "Courage Shell"
 
-			#Once all Chapter 5 Items are placed
+		#Replace the chosen item with the CS
+		cs_temp_inventory = copy.copy(inventory)
+		for index_eval in range(CS_place_index,0,-1):
+			cs_temp_inventory[index_eval] = cs_temp_inventory[index_eval-1]
+		
+		cs_temp_inventory[0] = "Courage Shell"
+
+		#Ensure the Thunder Rage is still in the inventory
+		if(cs_temp_inventory.count("Thunder Rage") == 1):
 			#The next event is using the Thunder Rage item before resuming the 2nd session of recipe fulfillment
-			TR_use_index = inventory.index("Thunder Rage")
+			TR_use_index = cs_temp_inventory.index("Thunder Rage")
 
 			if(TR_use_index < 10):
 				#Using the Thunder Rage will cause a NULL to appear in that slot
-				inventory[TR_use_index] = "NULL"
+				cs_temp_inventory[TR_use_index] = "NULL"
 
-			#Verify that this new inventory is at least capable of satisfying the remaining recipes
-			if(remainingOutputsCanBeFulfilled(inventory, tempOutputsFulfilled, recipeList, itemNames)):
-				#Calculate the overall frame count
-				temp_frames_CS = TOSS_FRAMES + invFrames[20-inventory.count("BLOCKED")][CS_place_index]
-				temp_frames_TR =               invFrames[20-inventory.count("BLOCKED")][TR_use_index]
-				temp_frame_sum = (temp_frames_DB +
-					              temp_frames_CO +
-								  temp_frames_KM +
-								  temp_frames_CS +
-								  temp_frames_TR +
-								  SORT_FRAMES)
+			#Calculate the frames of these actions
+			temp_frames_CS = TOSS_FRAMES + invFrames[20-cs_temp_inventory.count("BLOCKED")][CS_place_index]
+			temp_frames_TR =               invFrames[20-cs_temp_inventory.count("BLOCKED")][TR_use_index]
+			temp_frame_sum = (temp_frames_DB +
+							  temp_frames_CO +
+							  temp_frames_KM +
+							  temp_frames_CS +
+							  temp_frames_TR +
+							  SORT_FRAMES)
 
+			#Determine if the remaining inventory is sufficient to fulfill all remaining recipes
+			if(remainingOutputsCanBeFulfilled(cs_temp_inventory, tempOutputsFulfilled, recipeList, itemNames)):
 				#Get the index on where to insert this legal move to
 				insertIndex = getInsertionIndex(legal_moves, step_index, temp_frame_sum)
 
 				#Describe how the break should play out
-				desc = "Ch.5 Break: DB in slot {1}, CO in slot {2}, KM in slot {3}, Sort ({0}), CS in slot {4}, Use TR in slot {5}".format(sort_name,
-																																		   DB_place_index+1,
-																																		   CO_place_index+1,
-																																		   KM_place_index+1,
-																																		   CS_place_index+1,
-																																		   TR_use_index)
+				desc = "Ch.5 Break: Replace #{1} for DB, Replace #{2} for CO, Replace #{3} for KM, Sort ({0}), replace #{4} for CS, Use TR in #{5}".format(sort_name,
+																																						   DB_place_index+1,
+																																						   CO_place_index+1,
+																																						   KM_place_index+1,
+																																						   CS_place_index+1,
+																																						   TR_use_index+1)
 				#Append the Legal Move
-				legal_moves[step_index].insert(insertIndex,[desc,58,temp_frame_sum,copy.copy(inventory)])
-
-			#Return the replaced items for the next loop
-			inventory[CS_place_index] = CS_replacement
-			inventory[TR_use_index] = "Thunder Rage"
+				legal_moves[step_index].insert(insertIndex,[desc,58,temp_frame_sum,copy.copy(cs_temp_inventory)])
 
 #Evaluates all possible placements of the Keel Mango and Courage Shell
 #And all possible locations and types of sorting that can place the Coconut into a position where it can be duplicated
-def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, full_alpha_list, full_type_list):
-	#For descriptive purposes later
-	DB_place_index = temp_inventory.index("Dried Bouquet")
-	CO_place_index = temp_inventory.index("Coconut")
+def handleChapter5Eval(legal_moves,
+					   step_index,
+					   temp_inventory,
+					   tempOutputsFulfilled,
+					   recipeList,
+					   itemNames,
+					   invFrames,
+					   temp_frames_DB,
+					   temp_frames_CO,
+					   DB_place_index,
+					   CO_place_index,
+					   full_alpha_list,
+					   full_type_list):
 
 	#======================================
 	#Evaluate sorting before the Keel Mango
@@ -273,130 +306,134 @@ def handleChapter5Eval(legal_moves, step_index, temp_inventory, tempOutputsFulfi
 	#=====================================
 
 	#Default Keel Mango Placement Bounds
-	KM_lower_bound = 0
 	KM_upper_bound = 10
 
 	#Restrict the bounds if there is still a "NULL" in the inventory
 	#Because the Keel Mango can only go into the first slot
 	if("NULL" in temp_inventory):
-		KM_lower_bound = 0
 		KM_upper_bound = 1
 
-		#Update the inventory such that all items above the NULL are moved down one place
-		#And the KM is placed into slot 1
-		for index_eval in range(temp_inventory.index("NULL"),0,-1):
-			temp_inventory[index_eval] = temp_inventory[index_eval-1]
-
-		#The vacancy at the start of the inventory is now occupied with the new item
-		temp_inventory[0] = "Keel Mango"
-
 	#Place the Keel Mango
-	for KM_place_index in range(KM_lower_bound,KM_upper_bound):
-
-		#Replace the Keel Mango, remember what they were
-		KM_replacement = temp_inventory[KM_place_index]
+	for KM_place_index in range(0,KM_upper_bound):
+		#Making a copy of the temp inventory for what it looks like after the allocation of the KM
+		#This is just the easiest method I could think of, it can probably be done more efficiently
+		km_temp_inventory = copy.copy(temp_inventory)
 
 		#Calculate the needed frames
-		if(KM_upper_bound - KM_lower_bound > 1):
-			temp_frames_KM = TOSS_FRAMES + invFrames[20-temp_inventory.count("BLOCKED")][KM_place_index]
+		if(KM_upper_bound == 10):
+			#An item is being tossed
+			temp_frames_KM = TOSS_FRAMES + invFrames[20 - km_temp_inventory.count("BLOCKED")][KM_place_index]
+
+			#Update the inventory such that all items above the NULL are moved down one place
+			#And the KM is placed into slot 1
+			for index_eval in range(KM_place_index,0,-1):
+				km_temp_inventory[index_eval] = km_temp_inventory[index_eval-1]
 		else:
+			#There was a null somewhere, so this is effectively a free action
 			temp_frames_KM = 0
 
-		#Perform all sorts
-		#Alphabetically Sorted Inventory
-		alpha_inventory = getSortedInventory(temp_inventory, full_alpha_list, False)
+			#Update the inventory such that all items above the NULL are moved down one place
+			#And the KM is placed into slot 1
+			for index_eval in range(km_temp_inventory.index("NULL"),0,-1):
+				km_temp_inventory[index_eval] = km_temp_inventory[index_eval-1]
 
-		#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
-		#Because the coconut is needed for duplication
-		if(alpha_inventory.index("Coconut") >= 10):
-			#Handle all placements of the Courage Shell and usage of the Thunder Rage
-			handleChapter5LateSortEndItems(legal_moves,
-										   step_index,
-										   alpha_inventory,
-										   tempOutputsFulfilled,
-										   recipeList,
-										   itemNames,
-										   invFrames,
-										   ALPHA_SORT_FRAMES,
-										   "Alpha",
-										   temp_frames_DB,
-										   temp_frames_CO,
-										   temp_frames_KM,
-										   DB_place_index,
-										   CO_place_index,
-										   KM_place_index)
+		#The vacancy at the start of the inventory is now occupied with the new item
+		km_temp_inventory[0] = "Keel Mango"
 
-		#Reverse Alphabetical Sorted Inventory
-		reverse_alpha_inventory = getSortedInventory(temp_inventory, full_alpha_list, True)
+		#Ensure the Coconut is in the remaining inventory
+		if(km_temp_inventory.count("Coconut") == 1):
+			#Perform all sorts
+			#Alphabetically Sorted Inventory
+			alpha_inventory = getSortedInventory(km_temp_inventory, full_alpha_list, False)
 
-		#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
-		#Because the coconut is needed for duplication
-		if(reverse_alpha_inventory.index("Coconut") >= 10):
-			#Handle all placements of the Courage Shell and usage of the Thunder Rage
-			handleChapter5LateSortEndItems(legal_moves,
-										   step_index,
-										   reverse_alpha_inventory,
-										   tempOutputsFulfilled,
-										   recipeList,
-										   itemNames,
-										   invFrames,
-										   REVERSE_ALPHA_SORT_FRAMES,
-										   "Reverse-Alpha",
-										   temp_frames_DB,
-										   temp_frames_CO,
-										   temp_frames_KM,
-										   DB_place_index,
-										   CO_place_index,
-										   KM_place_index)
+			#Only bother with further evaluation if the sort placed the Coconut in the latter half of the inventory
+			#Because the coconut is needed for duplication
+			if(alpha_inventory.index("Coconut") >= 10):
+				#Handle all placements of the Courage Shell and usage of the Thunder Rage
+				handleChapter5LateSortEndItems(legal_moves,
+											   step_index,
+											   alpha_inventory,
+											   tempOutputsFulfilled,
+											   recipeList,
+											   itemNames,
+											   invFrames,
+											   ALPHA_SORT_FRAMES,
+											   "Alpha",
+											   temp_frames_DB,
+											   temp_frames_CO,
+											   temp_frames_KM,
+											   DB_place_index,
+											   CO_place_index,
+											   KM_place_index)
 
-		#Type Sorted Inventory
-		type_inventory = getSortedInventory(temp_inventory, full_type_list, False)
+			#Reverse Alphabetical Sorted Inventory
+			reverse_alpha_inventory = getSortedInventory(km_temp_inventory, full_alpha_list, True)
 
-		#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
-		#Because the coconut is needed for duplication
-		if(type_inventory.index("Coconut") >= 10):
-			#Handle all placements of the Courage Shell and usage of the Thunder Rage
-			handleChapter5LateSortEndItems(legal_moves,
-										   step_index,
-										   type_inventory,
-										   tempOutputsFulfilled,
-										   recipeList,
-										   itemNames,
-										   invFrames,
-										   TYPE_SORT_FRAMES,
-										   "Type",
-										   temp_frames_DB,
-										   temp_frames_CO,
-										   temp_frames_KM,
-										   DB_place_index,
-										   CO_place_index,
-										   KM_place_index)
+			#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
+			#Because the coconut is needed for duplication
+			if(reverse_alpha_inventory.index("Coconut") >= 10):
+				#Handle all placements of the Courage Shell and usage of the Thunder Rage
+				handleChapter5LateSortEndItems(legal_moves,
+											   step_index,
+											   reverse_alpha_inventory,
+											   tempOutputsFulfilled,
+											   recipeList,
+											   itemNames,
+											   invFrames,
+											   REVERSE_ALPHA_SORT_FRAMES,
+											   "Reverse-Alpha",
+											   temp_frames_DB,
+											   temp_frames_CO,
+											   temp_frames_KM,
+											   DB_place_index,
+											   CO_place_index,
+											   KM_place_index)
 
-		#Reverse Type Sorted Inventory
-		reverse_type_inventory = getSortedInventory(temp_inventory, full_type_list, True)
+			#Type Sorted Inventory
+			type_inventory = getSortedInventory(km_temp_inventory, full_type_list, False)
 
-		#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
-		#Because the coconut is needed for duplication
-		if(reverse_type_inventory.index("Coconut") >= 10):
-			#Handle all placements of the Courage Shell and usage of the Thunder Rage
-			handleChapter5LateSortEndItems(legal_moves,
-										   step_index,
-										   reverse_type_inventory,
-										   tempOutputsFulfilled,
-										   recipeList,
-										   itemNames,
-										   invFrames,
-										   REVERSE_TYPE_SORT_FRAMES,
-										   "Reverse-Type",
-										   temp_frames_DB,
-										   temp_frames_CO,
-										   temp_frames_KM,
-										   DB_place_index,
-										   CO_place_index,
-										   KM_place_index)
+			#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
+			#Because the coconut is needed for duplication
+			if(type_inventory.index("Coconut") >= 10):
+				#Handle all placements of the Courage Shell and usage of the Thunder Rage
+				handleChapter5LateSortEndItems(legal_moves,
+											   step_index,
+											   type_inventory,
+											   tempOutputsFulfilled,
+											   recipeList,
+											   itemNames,
+											   invFrames,
+											   TYPE_SORT_FRAMES,
+											   "Type",
+											   temp_frames_DB,
+											   temp_frames_CO,
+											   temp_frames_KM,
+											   DB_place_index,
+											   CO_place_index,
+											   KM_place_index)
 
-		#Return the replaced items for the next loop
-		temp_inventory[KM_place_index] = KM_replacement
+			#Reverse Type Sorted Inventory
+			reverse_type_inventory = getSortedInventory(km_temp_inventory, full_type_list, True)
+
+			#Only bother further evaluation if the sort placed the Coconut in the latter half of the inventory
+			#Because the coconut is needed for duplication
+			if(reverse_type_inventory.index("Coconut") >= 10):
+				#Handle all placements of the Courage Shell and usage of the Thunder Rage
+				handleChapter5LateSortEndItems(legal_moves,
+											   step_index,
+											   reverse_type_inventory,
+											   tempOutputsFulfilled,
+											   recipeList,
+											   itemNames,
+											   invFrames,
+											   REVERSE_TYPE_SORT_FRAMES,
+											   "Reverse-Type",
+											   temp_frames_DB,
+											   temp_frames_CO,
+											   temp_frames_KM,
+											   DB_place_index,
+											   CO_place_index,
+											   KM_place_index)
 
 #OptimizeRoadMap
 #Rearranges a given roadmap where possible to reduce the total number of frames
@@ -419,7 +456,7 @@ def OptimizeRoadMap(written_step,
 	for i in range(len(written_step)-2,0,-1):
 		if("(and toss)" in written_step[i]):
 			#This item can potentially be relocated to a quicker time
-			tossed_item = written_step[i].split(") ")[-1]
+			tossed_item = written_step[i].split(") ")[-1][1:-1]
 			rearranged_items.append(tossed_item)
 			written_step.pop(i)
 			frames_taken.pop(i)
@@ -456,7 +493,7 @@ def OptimizeRoadMap(written_step,
 							if(len(recipe) == 1):
 								#Only one ingredient to navigate to
 								temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
-								temp_use_desc = "Use {0} in slot {1} ".format(recipe[0],inventory[interval].index(recipe[0])+1)
+								temp_use_desc = "Use [{0}] in slot {1} ".format(recipe[0],inventory[interval].index(recipe[0])+1)
 							else:
 								#Two ingredients to navitgate to, but order matters
 								#Pick the larger-index number ingredient first, as it will reduce the frames needed to
@@ -465,24 +502,24 @@ def OptimizeRoadMap(written_step,
 								if(inventory[interval].index(recipe[0]) > inventory[interval].index(recipe[1])):
 									temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
 									temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
-									temp_use_desc = "Use {0} in slot {1} and {2} in slot {3} ".format(recipe[0],
-																									  inventory[interval].index(recipe[0])+1,
-																									  recipe[1],
-																									  inventory[interval].index(recipe[1])+1)
+									temp_use_desc = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(recipe[0],
+																									  	  inventory[interval].index(recipe[0])+1,
+																									  	  recipe[1],
+																									  	  inventory[interval].index(recipe[1])+1)
 								else:
 									temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
 									temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
-									temp_use_desc = "Use {0} in slot {1} and {2} in slot {3} ".format(recipe[1],
-																									  inventory[interval].index(recipe[1])+1,
-																									  recipe[0],
-																									  inventory[interval].index(recipe[0])+1)
+									temp_use_desc = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(recipe[1],
+																									  	  inventory[interval].index(recipe[1])+1,
+																									  	  recipe[0],
+																									  	  inventory[interval].index(recipe[0])+1)
 							
 							#Compare the temp frames to the current record
 							if(temp_frames < record_frames):
 								#Update the record information
 								record_frames = temp_frames
 								record_placement_index = interval
-								record_description = temp_use_desc + "to make (and toss) {0}".format(i)
+								record_description = temp_use_desc + "to make (and toss) <{0}>".format(i)
 
 		#All recipes and intervals have been evaluated
 		#Insert the optimized output in the designated interval
@@ -693,7 +730,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 									tempFrames = invFrames[viableItems][ingredientLoc-ingredientOffset]
 
 									#Describe what items were used
-									useDescription = "Use {0} in slot {1} ".format(recipe[0],ingredientLoc+1)
+									useDescription = "Use [{0}] in slot {1} ".format(recipe[0],ingredientLoc+1)
 								else:							 
 									#This is a potentially viable recipe with 2 ingredients
 									#Baseline frames based on how many times we need to access the menu
@@ -737,10 +774,6 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 									#Also determine the frames needed for the 2nd ingredient
 									if(ingredientLoc[0] < 10):
 										tempInventory[ingredientLoc[0]] = "NULL"
-										#print("---")
-										#print(ingredientLoc)
-										#print(ingredientOffset)
-										#print(viableItems)
 										tempFrames += invFrames[viableItems-1][ingredientLoc[1]-ingredientOffset[1]-1]
 									else:
 										tempFrames += invFrames[viableItems-0][ingredientLoc[1]-ingredientOffset[1]-0]
@@ -750,10 +783,10 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 										tempInventory[ingredientLoc[1]] = "NULL"
 
 									#Describe what items were used
-									useDescription = "Use {0} in slot {1} and {2} in slot {3} ".format(ingredientName[0],
-																									   ingredientLoc[0]+1,
-																									   ingredientName[1],
-																									   ingredientLoc[1]+1)
+									useDescription = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(ingredientName[0],
+																									       ingredientLoc[0]+1,
+																									       ingredientName[1],
+																									       ingredientLoc[1]+1)
 
 								#Handle allocation of the OUTPUT variable
 								#Options vary by whether there are "NULL"s within the inventory
@@ -772,7 +805,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 										#Determine where to insert this legal move into the list of legal moves (Sorted by frames taken)
 										insertIndex = getInsertionIndex(legalMoves, stepIndex, tempFrames)
 
-										placeDescription = "to make {0}, auto-placed in slot 1".format(itemNames[outputItem-1])
+										placeDescription = "to make (and auto-place) <{0}>".format(itemNames[outputItem-1])
 										legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,tempFrames,tempInventory])
 								except:
 									#There are no NULLs in the inventory. Something must be tossed
@@ -785,7 +818,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 										insertIndex = getInsertionIndex(legalMoves, stepIndex, tempFrames)
 
 
-										placeDescription = "to make (and toss) {0}".format(itemNames[outputItem-1])
+										placeDescription = "to make (and toss) <{0}>".format(itemNames[outputItem-1])
 										legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,tempFrames,tempInventory])
 
 									#Evaluate the viability of tossing all current inventory items
@@ -793,8 +826,14 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 									for tossedIndex in range(0,10):
 										#Make a copy of the tempInventory with the replaced item
 										replacedInventory = copy.copy(tempInventory)
-										replacedInventory[tossedIndex] = itemNames[outputItem-1]
 										tossedItemName = tempInventory[tossedIndex]
+
+										#All items before the selected removal item get moved down 1 position									
+										for index_eval in range(tossedIndex,0,-1):
+											replacedInventory[index_eval] = replacedInventory[index_eval-1]
+
+										#The vacancy at the start of the inventory is now occupied with the new item
+										replacedInventory[0] = recipeList[outputItem]["NAME"]
 
 										if(remainingOutputsCanBeFulfilled(replacedInventory, tempOutputsFulfilled, recipeList, itemNames)):
 											#Calculate the additional tossed frames. Have to +1 both viableItems and tosseditem as
@@ -802,9 +841,9 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 											replacedFrames = tempFrames+invFrames[viableItems+1][tossedIndex+1]
 											insertIndex = getInsertionIndex(legalMoves, stepIndex, replacedFrames)
 										
-											placeDescription = "to make {0}, toss {1} in slot {2}".format(itemNames[outputItem-1],
-																										  tossedItemName,
-																										  tossedIndex+1)
+											placeDescription = "to make <{0}>, toss [{1}] in slot {2}".format(itemNames[outputItem-1],
+																										      tossedItemName,
+																										      tossedIndex+1)
 											legalMoves[stepIndex].insert(insertIndex,[useDescription+placeDescription,outputItem,replacedFrames,replacedInventory])
 
 				#=========================================================================================			
@@ -826,13 +865,14 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 
 					#Determine how many spaces are available in the inventory
 					#For frame calculation purposes
-					viableItems = 20 - tempInventory.count("BLOCKED")
+					viableItems = 20 - (tempInventory.count("BLOCKED") + tempInventory.count("NULL"))
 
 					#If the Mousse Cake is in the first 10 spots, change it to NULL
 					#As it is used to acquire the Dried Bouquet (Hot Dog needs to be duped)
 					mousse_cake_loc = tempInventory.index("Mousse Cake")
 					if(mousse_cake_loc < 10):
 						tempInventory[mousse_cake_loc] = "NULL"
+						viableItems -= 1
 
 					#Handle allocation of the first 2 Ch.5 Items (Dried Bouquet and Coconut)	
 					if(tempInventory.count("NULL") >= 2):
@@ -843,7 +883,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 
 						#The vacancy at the start of the inventory is now occupied with the new item
 						tempInventory[0] = "Dried Bouquet"
-						tempindexDB = 1						
+						tempindexDB = 1	
+						viableItems += 1					
 
 						#The Coconut gets Auto Placed in the 1st slot...
 						#And everything else gets shifted down one to fill the first NULL 
@@ -853,13 +894,26 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 						#The vacancy at the start of the inventory is now occupied with the new item
 						tempInventory[0] = "Coconut"
 						tempindexCO = 1
+						viableItems += 1
 
 						#Auto Placing takes zero frames
 						temp_frames_DB = 0
 						temp_frames_CO = 0
 						
 						#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-						handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
+						handleChapter5Eval(legalMoves,
+										   stepIndex,
+										   tempInventory,
+										   tempOutputsFulfilled,
+										   recipeList,
+										   itemNames,
+										   invFrames,
+										   temp_frames_DB,
+										   temp_frames_CO,
+										   0, #DB was auto-placed in the 1st index
+										   0, #CO was auto-placed in the 1st index
+										   sorted_alpha_list,
+										   sorted_type_list)
 
 					elif(tempInventory.count("NULL") == 1):
 						#The Dried Bouquet gets Auto Placed in the 1st slot...
@@ -870,62 +924,84 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 						#The vacancy at the start of the inventory is now occupied with the new item
 						tempInventory[0] = "Dried Bouquet"
 						tempindexDB = 0
+						viableItems += 1
 
 						#Auto Placing takes zero frames
 						temp_frames_DB = 0
 
 						#The Coconut can only be placed in first 10 slots
-						for tempindexCO in range(0,10):
+						#Dried Bouquet will always be in the first slot
+						for tempindexCO in range(1,10):
 							#Don't waste time replacing the Dried Bouquet or Thunder Rage with the Coconut
-							if(tempindexCO != tempindexDB and
-							   tempInventory[tempindexCO] != "Thunder Rage"):
-								#Replace the item with the Coconut, but remember the replaced item
-								tossed_item_1 = tempInventory[tempindexCO]
-								tempInventory[tempindexCO] = "Coconut"
+							if(tempInventory[tempindexCO] != "Thunder Rage"):
+								#Replace the item with the Coconut
+								#All items above the replaced item float down one space
+								#and the Coconut is always placed in slot 1 
+								co_temp_inventory = copy.copy(tempInventory)
+								for index_eval in range(tempindexCO,0,-1):
+									co_temp_inventory[index_eval] = co_temp_inventory[index_eval-1]
+								
+								co_temp_inventory[0] = "Coconut"
 
 								#Calculate the number of frames needed to pick this slot for replacement
 								temp_frames_CO = TOSS_FRAMES + invFrames[viableItems][tempindexCO]
 
 								#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-								handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
-
-								#Reset what was previously in the Coconut's slot
-								tempInventory[tempindexCO] = tossed_item_1
+								handleChapter5Eval(legalMoves,
+								                   stepIndex,
+												   co_temp_inventory,
+												   tempOutputsFulfilled,
+												   recipeList,
+												   itemNames,
+												   invFrames,
+												   temp_frames_DB,
+												   temp_frames_CO,
+												   0, #DB was auto-placed in the 1st index
+												   tempindexCO, #CO was manually placed
+												   sorted_alpha_list,
+												   sorted_type_list)
 					else:
 						#No NULLs to utilize for Chapter 5 Intermission
-						#The Dried Bouquet can only be placed in the first 10 slots
+						#Both the DB and CO can only replace items in the first 10 slots
+						#The remaining items always slide down to fill the vacanacy
+						#The DB will eventually end up in Slot #2 and
+						#The CO will eventually end up in Slot #1
 						for tempindexDB in range(0,10):
-							#Don't replace the Thunder Rage with the Dried Bouquet (Needed later)
-							if(tempInventory[tempindexDB] != "Thunder Rage"):
-								#Replace the item with the Dried Bouquet, but remember the replaced item
-								tossed_item_1 = tempInventory[tempindexDB]
-								tempInventory[tempindexDB] = "Dried Bouquet"
-
-								#Calculate the number of frames needed to pick this slot for replacement
-								temp_frames_DB = TOSS_FRAMES + invFrames[viableItems][tempindexDB]
-
-								#The Coconut can only be placed in first 10 slots
-								for tempindexCO in range(0,10):
-									#Don't replace the Thunder Rage or Dried Bouquet with the Coconut (Needed Later)
-									if(tempindexCO != tempindexDB and
-									   tempInventory[tempindexCO] != "Thunder Rage"):
-										#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-										
-										#Replace the item with the Dried Bouquet, but remember the replaced item
-										tossed_item_2 = tempInventory[tempindexCO]
-										tempInventory[tempindexCO] = "Coconut"
-
-										#Calculate the number of frames needed to pick this slot for replacement
-										temp_frames_CO = TOSS_FRAMES + invFrames[viableItems][tempindexCO]
-
-										#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
-										handleChapter5Eval(legalMoves, stepIndex, tempInventory, tempOutputsFulfilled, recipeList, itemNames, invFrames, temp_frames_DB, temp_frames_CO, sorted_alpha_list, sorted_type_list)
-
-										#Reset what was preciously in the Coconut's Slot
-										tempInventory[tempindexCO] = tossed_item_2
+							for tempindexCO in range(tempindexDB+1,10):
+								#Replace the 1st chosen item with the DB
+								dbco_temp_inventory = copy.copy(tempInventory)
+								for index_eval in range(tempindexDB,0,-1):
+									dbco_temp_inventory[index_eval] = dbco_temp_inventory[index_eval-1]
 								
-								#Reset what was previously in the Dried Bouquet's Slot
-								tempInventory[tempindexDB] = tossed_item_1
+								dbco_temp_inventory[0] = "Coconut"
+
+								#Replace the 2nd chosen item with the CO
+								for index_eval in range(tempindexCO,0,-1):
+									dbco_temp_inventory[index_eval] = dbco_temp_inventory[index_eval-1]
+								
+								dbco_temp_inventory[0] = "Coconut"
+
+								#Calculate the frames of these actions
+								temp_frames_DB = TOSS_FRAMES + invFrames[viableItems][tempindexDB]
+								temp_frames_CO = TOSS_FRAMES + invFrames[viableItems][tempindexCO]
+								
+								#Only evaluate the remainder of the Ch.5 Intermission if the
+								#Thunder Rage is still present in the inventory
+								if(dbco_temp_inventory.count("Thunder Rage") >= 1):
+									#Handle the Allocation of the Coconut Sort, Keel Mango, and Courage Shell
+									handleChapter5Eval(legalMoves,
+									                   stepIndex,
+													   dbco_temp_inventory,
+													   tempOutputsFulfilled,
+													   recipeList,
+													   itemNames,
+													   invFrames,
+													   temp_frames_DB,
+													   temp_frames_CO,
+													   tempindexDB, #DB was manually placed
+													   tempindexCO, #CO was manually placed
+													   sorted_alpha_list,
+													   sorted_type_list)
 				
 				#======================================
 				# Special Handling of Inventory Sorting
@@ -940,7 +1016,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 							total_sorts += 1
 
 					#Limit the number of sorts allowed in a roadmap
-					if(total_sorts <= 15):
+					if(total_sorts <= 10):
 						
 						#Alphabetical Sort
 						alpha_inventory = getSortedInventory(inventory[stepIndex], sorted_alpha_list, False)
