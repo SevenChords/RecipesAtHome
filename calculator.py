@@ -22,7 +22,7 @@ JUMP_STORAGE_NO_TOSS_FRAMES = 5
 #Finished Roadmaps can potentially have some legal moves rearranged to faster points in time
 #Give the search space some buffer frames so that if a roadmap is discovered that is "close" to the frame record,
 #Perform optimal shuffling of the moves to find the best possible rearranged roadmap and evaluate for new records
-BUFFER_SEARCH_FRAMES = 120
+BUFFER_SEARCH_FRAMES = 150
 
 def printResults(filename, writtenStep, framesTaken, totalFrames, inventory, outputCreated, itemNames):
 	#Print the results of all states observed in the current stack
@@ -452,8 +452,11 @@ def OptimizeRoadMap(written_step,
 
 	#Determine which steps can be rearranged
 	#Evaluate the list in reverse order for easy list manipulation
-	#The first and last step won't be changed
-	for i in range(len(written_step)-2,0,-1):
+	#Ignore first instance (Its the "Begin" line that we have to define)
+	#Ignore second instance (The first step must always have a 1-ingredient recipe,
+	#	don't want to risk moving the 1-ingredient recipe elsewhere and having an invalid map)
+	#Ignore last instance (The mistake is cooked last because almost everything can make it)
+	for i in range(len(written_step)-2,1,-1):
 		if("(and toss)" in written_step[i]):
 			#This item can potentially be relocated to a quicker time
 			tossed_item = written_step[i].split(") ")[-1][1:-1]
@@ -484,44 +487,41 @@ def OptimizeRoadMap(written_step,
 					#Only want recipes where all ingredients are in the last 10 slots of the evaluated inventory
 					if(all([ingredient in inventory[interval] for ingredient in recipe])):
 						if(all([inventory[interval].index(ingredient) >= 10 for ingredient in recipe])):
-							#The very first recipe fulfillment (if we're evaluating there)
-							#must take a single ingredient
-							if(interval > 0 or len(recipe) == 1):
-								#This is a valid recipe and location to fulfill (and toss) this output item
-								#Calculate the frames needed to produce this step
-								temp_frames = TOSS_FRAMES
-								temp_use_desc = ""
+							#This is a valid recipe and location to fulfill (and toss) this output item
+							#Calculate the frames needed to produce this step
+							temp_frames = TOSS_FRAMES
+							temp_use_desc = ""
 
-								if(len(recipe) == 1):
-									#Only one ingredient to navigate to
+							if(len(recipe) == 1):
+								#Only one ingredient to navigate to
+								temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
+								temp_use_desc = "Use [{0}] in slot {1} ".format(recipe[0],inventory[interval].index(recipe[0])+1)
+							else:
+								#Two ingredients to navitgate to, but order matters
+								#Pick the larger-index number ingredient first, as it will reduce the frames needed to
+								#reach the other ingredient
+								temp_frames += CHOOSE_2ND_INGREDIENT_FRAMES
+								if(inventory[interval].index(recipe[0]) > inventory[interval].index(recipe[1])):
 									temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
-									temp_use_desc = "Use [{0}] in slot {1} ".format(recipe[0],inventory[interval].index(recipe[0])+1)
+									temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
+									temp_use_desc = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(recipe[0],
+																										inventory[interval].index(recipe[0])+1,
+																										recipe[1],
+																										inventory[interval].index(recipe[1])+1)
 								else:
-									#Two ingredients to navitgate to, but order matters
-									#Pick the larger-index number ingredient first, as it will reduce the frames needed to
-									#reach the other ingredient
-									temp_frames += CHOOSE_2ND_INGREDIENT_FRAMES
-									if(inventory[interval].index(recipe[0]) > inventory[interval].index(recipe[1])):
-										temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
-										temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
-										temp_use_desc = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(recipe[0],
-																											inventory[interval].index(recipe[0])+1,
-																											recipe[1],
-																											inventory[interval].index(recipe[1])+1)
-									else:
-										temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
-										temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
-										temp_use_desc = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(recipe[1],
-																											inventory[interval].index(recipe[1])+1,
-																											recipe[0],
-																											inventory[interval].index(recipe[0])+1)
-								
-								#Compare the temp frames to the current record
-								if(temp_frames < record_frames):
-									#Update the record information
-									record_frames = temp_frames
-									record_placement_index = interval
-									record_description = temp_use_desc + "to make (and toss) <{0}>".format(i)
+									temp_frames += INV_FRAMES[20 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[1])]
+									temp_frames += INV_FRAMES[19 - inventory[interval].count("BLOCKED")][inventory[interval].index(recipe[0])]
+									temp_use_desc = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(recipe[1],
+																										inventory[interval].index(recipe[1])+1,
+																										recipe[0],
+																										inventory[interval].index(recipe[0])+1)
+							
+							#Compare the temp frames to the current record
+							if(temp_frames < record_frames):
+								#Update the record information
+								record_frames = temp_frames
+								record_placement_index = interval
+								record_description = temp_use_desc + "to make (and toss) <{0}>".format(i)
 
 		#All recipes and intervals have been evaluated
 		#Insert the optimized output in the designated interval
@@ -620,7 +620,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 
 		#If the iteration count exceeds a given threshold,
 		#Then reset the entire search space and begin anew
-		while(iterationCount < 100000):
+		while(iterationCount < 10000):
 
 			#Check for bad states to immediately retreat from
 			#The Thunder Rage must remain in the inventory until the Ch.5 Intermission
@@ -667,7 +667,7 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 															  recipeList,
 															  invFrames)
 
-					log(3, "Calculator", "OptimizeRoadmap", "Call " + str(callNumber), "Rearranging Saved {0} Frames!".format(totalFrames[stepIndex]-rearranged_frame_record))
+					log(4, "Calculator", "OptimizeRoadmap", "Call " + str(callNumber), "Rearranging Saved {0} Frames!".format(totalFrames[stepIndex]-rearranged_frame_record))
 
 					if(rearranged_frame_record < current_frame_record):
 						current_frame_record = rearranged_frame_record
