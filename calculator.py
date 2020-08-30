@@ -772,17 +772,19 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 									#Calculate the number of frames needed to grab the first item
 									tempFrames += invFrames[viableItems][ingredientLoc[0]-ingredientOffset[0]]
 
-									#Set this inventory index to null if the item was in the first 10 slots
-									#Also determine the frames needed for the 2nd ingredient
-									if(ingredientLoc[0] < 10):
-										tempInventory[ingredientLoc[0]] = "NULL"
+									#Set each inventory item to "NULL" if it was in the first 10 slots
+									for ingredient_eval in range(0,2):
+										if(ingredientLoc[ingredient_eval] < 10):
+											tempInventory[ingredientLoc[ingredient_eval]] = "NULL"
+
+									#Determine frames needed to grab 2nd ingredient
+									#First ingredient is always removed from the menu, so there is always 1 less viable item
+									if(ingredientLoc[1] > ingredientLoc[0]):
+										#In this case, the 2nd ingredient has "moved up" one slot since the 1st ingredient is invisible for selection
 										tempFrames += invFrames[viableItems-1][ingredientLoc[1]-ingredientOffset[1]-1]
 									else:
-										tempFrames += invFrames[viableItems-0][ingredientLoc[1]-ingredientOffset[1]-0]
-
-									#Set this inventory index to null if the item was in the first 10 slots
-									if(ingredientLoc[1] < 10):
-										tempInventory[ingredientLoc[1]] = "NULL"
+										#In this case, the 2nd ingredient was found earlier on than the 1st, so no change in index
+										tempFrames += invFrames[viableItems-1][ingredientLoc[1]-ingredientOffset[1]-0]
 
 									#Describe what items were used
 									useDescription = "Use [{0}] in slot {1} and [{2}] in slot {3} ".format(ingredientName[0],
@@ -1083,18 +1085,27 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 				if(stepIndex == 0):
 					legalMoves[stepIndex] = list(filter(lambda x: not " and " in x[0], legalMoves[stepIndex]))
 
-				#Somewhat Random process of picking the quicker moves to recurse down
-				#Arbitrarilty remove the first listed move with a given probability
-				if(select) :
-					total_moves = len(legalMoves[stepIndex])
-					while(total_moves > 1 and random.random() < 0.5):
+				#Special filtering if we only had one recipe left to fulfill
+				if(outputCreated[stepIndex].count(True) == 57 and
+				   ("Use " in legalMoves[stepIndex][0][0])):
+					#If there are any legal moves that satisfy the final recipe
+					#Strip out everything besides the fastest legal move
+					#This saves on recursing down pointless states
+					while(len(legalMoves[stepIndex]) > 1):
+						legalMoves[stepIndex].pop(1)
+				else:
+					#Somewhat Random process of picking the quicker moves to recurse down
+					#Arbitrarilty remove the first listed move with a given probability
+					if(select) :
 						total_moves = len(legalMoves[stepIndex])
-						legalMoves[stepIndex].pop(0)
+						while(total_moves > 1 and random.random() < 0.5):
+							total_moves = len(legalMoves[stepIndex])
+							legalMoves[stepIndex].pop(0)
 
-				#When not doing the "Select" methodology, and opting for Randomize
-				#Just shuffle the entire list of legal moves and pick the new first item
-				elif(randomise):
-					random.shuffle(legalMoves[stepIndex])
+					#When not doing the "Select" methodology, and opting for Randomize
+					#Just shuffle the entire list of legal moves and pick the new first item
+					elif(randomise):
+						random.shuffle(legalMoves[stepIndex])
 
 				if(len(legalMoves[stepIndex]) == 0):
 					#There are no legal moves to iterate on, go back up...
