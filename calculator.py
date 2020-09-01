@@ -1096,10 +1096,8 @@ def calculateOrder(callNumber, startingInventory, recipeList, invFrames, current
 				else:
 					#Somewhat Random process of picking the quicker moves to recurse down
 					#Arbitrarilty remove the first listed move with a given probability
-					if(select) :
-						total_moves = len(legalMoves[stepIndex])
-						while(total_moves > 1 and random.random() < 0.5):
-							total_moves = len(legalMoves[stepIndex])
+					if(select and stepIndex < 55):
+						while(len(legalMoves[stepIndex]) > 1 and random.random() < 0.5):
 							legalMoves[stepIndex].pop(0)
 
 					#When not doing the "Select" methodology, and opting for Randomize
